@@ -1,7 +1,14 @@
 #pragma once
-#include "../ImGui//imgui.h"
+
+#include "imgui.h"
+#include "imgui_stdlib.h"
+#include "sol/sol.hpp"
+
 #include <string>
-#include "sol.hpp"
+#include <tuple>
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wformat-security"
 
 namespace sol_ImGui
 {
@@ -40,8 +47,8 @@ namespace sol_ImGui
 	inline bool BeginChild(const std::string& name)														{ return ImGui::BeginChild(name.c_str()); }
 	inline bool BeginChild(const std::string& name, float sizeX)										{ return ImGui::BeginChild(name.c_str(), { sizeX, 0 }); }
 	inline bool BeginChild(const std::string& name, float sizeX, float sizeY)							{ return ImGui::BeginChild(name.c_str(), { sizeX, sizeY }); }
-	inline bool BeginChild(const std::string& name, float sizeX, float sizeY, bool border)				{ return ImGui::BeginChild(name.c_str(), { sizeX, sizeY }, border); }
-	inline bool BeginChild(const std::string& name, float sizeX, float sizeY, bool border, int flags)	{ return ImGui::BeginChild(name.c_str(), { sizeX, sizeY }, border, static_cast<ImGuiWindowFlags>(flags)); }
+	inline bool BeginChild(const std::string& name, float sizeX, float sizeY, int childFlags)			{ return ImGui::BeginChild(name.c_str(), { sizeX, sizeY }, static_cast<ImGuiChildFlags>(childFlags)); }
+	inline bool BeginChild(const std::string& name, float sizeX, float sizeY, int childFlags, int flags){ return ImGui::BeginChild(name.c_str(), { sizeX, sizeY }, static_cast<ImGuiChildFlags>(childFlags), static_cast<ImGuiWindowFlags>(flags)); }
 	inline void EndChild()																				{ ImGui::EndChild(); }
 
 	// Windows Utilities
@@ -92,7 +99,7 @@ namespace sol_ImGui
 	inline std::tuple<float, float> GetContentRegionAvail()												{ const auto vec2{ ImGui::GetContentRegionAvail() };  return std::make_tuple(vec2.x, vec2.y); }
 	inline std::tuple<float, float> GetWindowContentRegionMin()											{ const auto vec2{ ImGui::GetWindowContentRegionMin() };  return std::make_tuple(vec2.x, vec2.y); }
 	inline std::tuple<float, float> GetWindowContentRegionMax()											{ const auto vec2{ ImGui::GetWindowContentRegionMax() };  return std::make_tuple(vec2.x, vec2.y); }
-	inline float GetWindowContentRegionWidth()															{ return ImGui::GetWindowContentRegionWidth(); }
+	inline float GetWindowContentRegionWidth()															{ return ImGui::GetWindowContentRegionMax().x - ImGui::GetWindowContentRegionMin().x; }
 
 	// Windows Scrolling
 	inline float GetScrollX()																			{ return ImGui::GetScrollX(); }
@@ -141,10 +148,10 @@ namespace sol_ImGui
 	inline void PushTextWrapPos()																		{ ImGui::PushTextWrapPos(); }
 	inline void PushTextWrapPos(float wrapLocalPosX)													{ ImGui::PushTextWrapPos(wrapLocalPosX); }
 	inline void PopTextWrapPos()																		{ ImGui::PopTextWrapPos(); }
-	inline void PushAllowKeyboardFocus(bool allowKeyboardFocus)											{ ImGui::PushAllowKeyboardFocus(allowKeyboardFocus); }
-	inline void PopAllowKeyboardFocus()																	{ ImGui::PopAllowKeyboardFocus(); }
-	inline void PushButtonRepeat(bool repeat)															{ ImGui::PushButtonRepeat(repeat); }
-	inline void PopButtonRepeat()																		{ ImGui::PopButtonRepeat(); }
+	//inline void PushAllowKeyboardFocus(bool allowKeyboardFocus)											{ ImGui::PushAllowKeyboardFocus(allowKeyboardFocus); }
+	//inline void PopAllowKeyboardFocus()																	{ ImGui::PopAllowKeyboardFocus(); }
+	//inline void PushButtonRepeat(bool repeat)															{ ImGui::PushButtonRepeat(repeat); }
+	//inline void PopButtonRepeat()																		{ ImGui::PopButtonRepeat(); }
 
 	// Cursor / Layout
 	inline void Separator()																				{ ImGui::Separator(); }
@@ -202,7 +209,7 @@ namespace sol_ImGui
 	inline bool InvisibleButton(const std::string& stringID, float sizeX, float sizeY)					{ return ImGui::InvisibleButton(stringID.c_str(), { sizeX, sizeY }); }
 	inline bool ArrowButton(const std::string& stringID, int dir)										{ return ImGui::ArrowButton(stringID.c_str(), static_cast<ImGuiDir>(dir)); }
 	inline void Image()																					{ /* TODO: Image(...) ==> UNSUPPORTED */ }
-	inline void ImageButton()																			{ /* TODO: ImageButton(...) ==> UNSUPPORTED */ }
+	//inline void ImageButton()																			{ /* TODO: ImageButton(...) ==> UNSUPPORTED */ }
 	inline std::tuple<bool, bool> Checkbox(const std::string& label, bool v)
 	{
 		bool value{ v };
@@ -272,7 +279,7 @@ namespace sol_ImGui
 	inline std::tuple<float, bool> DragFloat(const std::string& label, float v, float v_speed, float v_min)																				{ bool used = ImGui::DragFloat(label.c_str(), &v, v_speed, v_min); return std::make_tuple(v, used); }
 	inline std::tuple<float, bool> DragFloat(const std::string& label, float v, float v_speed, float v_min, float v_max)																{ bool used = ImGui::DragFloat(label.c_str(), &v, v_speed, v_min, v_max); return std::make_tuple(v, used); }
 	inline std::tuple<float, bool> DragFloat(const std::string& label, float v, float v_speed, float v_min, float v_max, const std::string& format)										{ bool used = ImGui::DragFloat(label.c_str(), &v, v_speed, v_min, v_max, format.c_str()); return std::make_tuple(v, used); }
-	inline std::tuple<float, bool> DragFloat(const std::string& label, float v, float v_speed, float v_min, float v_max, const std::string& format, float power)						{ bool used = ImGui::DragFloat(label.c_str(), &v, v_speed, v_min, v_max, format.c_str(), power); return std::make_tuple(v, used); }
+	inline std::tuple<float, bool> DragFloat(const std::string& label, float v, float v_speed, float v_min, float v_max, const std::string& format, int flags)							{ bool used = ImGui::DragFloat(label.c_str(), &v, v_speed, v_min, v_max, format.c_str(), (ImGuiSliderFlags) flags); return std::make_tuple(v, used); }
 	inline std::tuple<sol::as_table_t<std::vector<float>>, bool> DragFloat2(const std::string& label, const sol::table& v)
 	{
 		const lua_Number	v1{ v[1].get<std::optional<lua_Number>>().value_or(static_cast<lua_Number>(0)) },
@@ -338,12 +345,12 @@ namespace sol_ImGui
 
 		return std::make_tuple(float2, used);
 	}
-	inline std::tuple<sol::as_table_t<std::vector<float>>, bool> DragFloat2(const std::string& label, const sol::table& v, float v_speed, float v_min, float v_max, const std::string& format, float power)
+	inline std::tuple<sol::as_table_t<std::vector<float>>, bool> DragFloat2(const std::string& label, const sol::table& v, float v_speed, float v_min, float v_max, const std::string& format, int flags)
 	{
 		const lua_Number	v1{ v[1].get<std::optional<lua_Number>>().value_or(static_cast<lua_Number>(0)) },
 							v2{ v[2].get<std::optional<lua_Number>>().value_or(static_cast<lua_Number>(0)) };
 		float value[2] = { float(v1), float(v2) };
-		bool used = ImGui::DragFloat2(label.c_str(), value, v_speed, v_min, v_max, format.c_str(), power);
+		bool used = ImGui::DragFloat2(label.c_str(), value, v_speed, v_min, v_max, format.c_str(), (ImGuiSliderFlags)flags);
 
 		sol::as_table_t float2 = sol::as_table(std::vector<float>{
 			value[0], value[1]
@@ -421,13 +428,13 @@ namespace sol_ImGui
 
 		return std::make_tuple(float3, used);
 	}
-	inline std::tuple<sol::as_table_t<std::vector<float>>, bool> DragFloat3(const std::string& label, const sol::table& v, float v_speed, float v_min, float v_max, const std::string& format, float power)
+	inline std::tuple<sol::as_table_t<std::vector<float>>, bool> DragFloat3(const std::string& label, const sol::table& v, float v_speed, float v_min, float v_max, const std::string& format, int flags)
 	{
 		const lua_Number	v1{ v[1].get<std::optional<lua_Number>>().value_or(static_cast<lua_Number>(0)) },
 			v2{ v[2].get<std::optional<lua_Number>>().value_or(static_cast<lua_Number>(0)) },
 			v3{ v[3].get<std::optional<lua_Number>>().value_or(static_cast<lua_Number>(0)) };
 		float value[3] = { float(v1), float(v2), float(v3) };
-		bool used = ImGui::DragFloat3(label.c_str(), value, v_speed, v_min, v_max, format.c_str(), power);
+		bool used = ImGui::DragFloat3(label.c_str(), value, v_speed, v_min, v_max, format.c_str(), (ImGuiSliderFlags)flags);
 
 		sol::as_table_t float3 = sol::as_table(std::vector<float>{
 			value[0], value[1], value[2]
@@ -510,14 +517,14 @@ namespace sol_ImGui
 
 		return std::make_tuple(float4, used);
 	}
-	inline std::tuple<sol::as_table_t<std::vector<float>>, bool> DragFloat4(const std::string& label, const sol::table& v, float v_speed, float v_min, float v_max, const std::string& format, float power)
+	inline std::tuple<sol::as_table_t<std::vector<float>>, bool> DragFloat4(const std::string& label, const sol::table& v, float v_speed, float v_min, float v_max, const std::string& format, int flags)
 	{
 		const lua_Number	v1{ v[1].get<std::optional<lua_Number>>().value_or(static_cast<lua_Number>(0)) },
 							v2{ v[2].get<std::optional<lua_Number>>().value_or(static_cast<lua_Number>(0)) },
 							v3{ v[3].get<std::optional<lua_Number>>().value_or(static_cast<lua_Number>(0)) },
 							v4{ v[4].get<std::optional<lua_Number>>().value_or(static_cast<lua_Number>(0)) };
 		float value[4] = { float(v1), float(v2), float(v3), float(v4) };
-		bool used = ImGui::DragFloat4(label.c_str(), value, v_speed, v_min, v_max, format.c_str(), power);
+		bool used = ImGui::DragFloat4(label.c_str(), value, v_speed, v_min, v_max, format.c_str(), (ImGuiSliderFlags)flags);
 
 		sol::as_table_t float4 = sol::as_table(std::vector<float>{
 			value[0], value[1], value[2], value[3]
@@ -531,6 +538,7 @@ namespace sol_ImGui
 	inline std::tuple<int, bool> DragInt(const std::string& label, int v, float v_speed, int v_min)																						{ bool used = ImGui::DragInt(label.c_str(), &v, v_speed, v_min); return std::make_tuple(v, used); }
 	inline std::tuple<int, bool> DragInt(const std::string& label, int v, float v_speed, int v_min, int v_max)																			{ bool used = ImGui::DragInt(label.c_str(), &v, v_speed, v_min, v_max); return std::make_tuple(v, used); }
 	inline std::tuple<int, bool> DragInt(const std::string& label, int v, float v_speed, int v_min, int v_max, const std::string& format)												{ bool used = ImGui::DragInt(label.c_str(), &v, v_speed, v_min, v_max, format.c_str()); return std::make_tuple(v, used); }
+	inline std::tuple<int, bool> DragInt(const std::string& label, int v, float v_speed, int v_min, int v_max, const std::string& format, int flags)									{ bool used = ImGui::DragInt(label.c_str(), &v, v_speed, v_min, v_max, format.c_str(), (ImGuiSliderFlags)flags); return std::make_tuple(v, used); }
 	inline std::tuple<sol::as_table_t<std::vector<int>>, bool> DragInt2(const std::string& label, const sol::table& v)
 	{
 		const lua_Number	v1{ v[1].get<std::optional<lua_Number>>().value_or(static_cast<lua_Number>(0)) },
@@ -589,6 +597,19 @@ namespace sol_ImGui
 							v2{ v[2].get<std::optional<lua_Number>>().value_or(static_cast<lua_Number>(0)) };
 		int value[2] = { int(v1), int(v2) };
 		bool used = ImGui::DragInt2(label.c_str(), value, v_speed, v_min, v_max, format.c_str());
+
+		sol::as_table_t int2 = sol::as_table(std::vector<int>{
+			value[0], value[1]
+		});
+
+		return std::make_tuple(int2, used);
+	}
+	inline std::tuple<sol::as_table_t<std::vector<int>>, bool> DragInt2(const std::string& label, const sol::table& v, float v_speed, int v_min, int v_max, const std::string& format, int flags)
+	{
+		const lua_Number	v1{ v[1].get<std::optional<lua_Number>>().value_or(static_cast<lua_Number>(0)) },
+							v2{ v[2].get<std::optional<lua_Number>>().value_or(static_cast<lua_Number>(0)) };
+		int value[2] = { int(v1), int(v2) };
+		bool used = ImGui::DragInt2(label.c_str(), value, v_speed, v_min, v_max, format.c_str(), (ImGuiSliderFlags)flags);
 
 		sol::as_table_t int2 = sol::as_table(std::vector<int>{
 			value[0], value[1]
@@ -659,6 +680,20 @@ namespace sol_ImGui
 							v3{ v[3].get<std::optional<lua_Number>>().value_or(static_cast<lua_Number>(0)) };
 		int value[3] = { int(v1), int(v2), int(v3) };
 		bool used = ImGui::DragInt3(label.c_str(), value, v_speed, v_min, v_max, format.c_str());
+
+		sol::as_table_t int3 = sol::as_table(std::vector<int>{
+			value[0], value[1], value[2]
+		});
+
+		return std::make_tuple(int3, used);
+	}
+	inline std::tuple<sol::as_table_t<std::vector<int>>, bool> DragInt3(const std::string& label, const sol::table& v, float v_speed, int v_min, int v_max, const std::string& format, int flags)
+	{
+		const lua_Number	v1{ v[1].get<std::optional<lua_Number>>().value_or(static_cast<lua_Number>(0)) },
+							v2{ v[2].get<std::optional<lua_Number>>().value_or(static_cast<lua_Number>(0)) },
+							v3{ v[3].get<std::optional<lua_Number>>().value_or(static_cast<lua_Number>(0)) };
+		int value[3] = { int(v1), int(v2), int(v3) };
+		bool used = ImGui::DragInt3(label.c_str(), value, v_speed, v_min, v_max, format.c_str(), (ImGuiSliderFlags)flags);
 
 		sol::as_table_t int3 = sol::as_table(std::vector<int>{
 			value[0], value[1], value[2]
@@ -741,6 +776,21 @@ namespace sol_ImGui
 
 		return std::make_tuple(int4, used);
 	}
+	inline std::tuple<sol::as_table_t<std::vector<int>>, bool> DragInt4(const std::string& label, const sol::table& v, float v_speed, int v_min, int v_max, const std::string& format, int flags)
+	{
+		const lua_Number	v1{ v[1].get<std::optional<lua_Number>>().value_or(static_cast<lua_Number>(0)) },
+							v2{ v[2].get<std::optional<lua_Number>>().value_or(static_cast<lua_Number>(0)) },
+							v3{ v[3].get<std::optional<lua_Number>>().value_or(static_cast<lua_Number>(0)) },
+							v4{ v[4].get<std::optional<lua_Number>>().value_or(static_cast<lua_Number>(0)) };
+		int value[4] = { int(v1), int(v2), int(v3), int(v4) };
+		bool used = ImGui::DragInt4(label.c_str(), value, v_speed, v_min, v_max, format.c_str(), (ImGuiSliderFlags)flags);
+
+		sol::as_table_t int4 = sol::as_table(std::vector<int>{
+			value[0], value[1], value[2], value[3]
+		});
+
+		return std::make_tuple(int4, used);
+	}
 	inline void DragIntRange2()																																							{ /* TODO: DragIntRange2(...) ==> UNSUPPORTED */ }
 	inline void DragScalar()																																							{ /* TODO: DragScalar(...) ==> UNSUPPORTED */ }
 	inline void DragScalarN()																																							{ /* TODO: DragScalarN(...) ==> UNSUPPORTED */ }
@@ -748,7 +798,7 @@ namespace sol_ImGui
 	// Widgets: Sliders
 	inline std::tuple<float, bool> SliderFloat(const std::string& label, float v, float v_min, float v_max)																				{ bool used = ImGui::SliderFloat(label.c_str(), &v, v_min, v_max); return std::make_tuple(v, used); }
 	inline std::tuple<float, bool> SliderFloat(const std::string& label, float v, float v_min, float v_max, const std::string& format)													{ bool used = ImGui::SliderFloat(label.c_str(), &v, v_min, v_max, format.c_str()); return std::make_tuple(v, used); }
-	inline std::tuple<float, bool> SliderFloat(const std::string& label, float v, float v_min, float v_max, const std::string& format, float power)										{ bool used = ImGui::SliderFloat(label.c_str(), &v, v_min, v_max, format.c_str(), power); return std::make_tuple(v, used); }
+	inline std::tuple<float, bool> SliderFloat(const std::string& label, float v, float v_min, float v_max, const std::string& format, int flags)										{ bool used = ImGui::SliderFloat(label.c_str(), &v, v_min, v_max, format.c_str(), (ImGuiSliderFlags)flags); return std::make_tuple(v, used); }
 	inline std::tuple<sol::as_table_t<std::vector<float>>, bool> SliderFloat2(const std::string& label, const sol::table& v, float v_min, float v_max)
 	{
 		const lua_Number	v1{ v[1].get<std::optional<lua_Number>>().value_or(static_cast<lua_Number>(0)) },
@@ -775,12 +825,12 @@ namespace sol_ImGui
 
 		return std::make_tuple(float2, used);
 	}
-	inline std::tuple<sol::as_table_t<std::vector<float>>, bool> SliderFloat2(const std::string& label, const sol::table& v, float v_min, float v_max, const std::string& format, float power)
+	inline std::tuple<sol::as_table_t<std::vector<float>>, bool> SliderFloat2(const std::string& label, const sol::table& v, float v_min, float v_max, const std::string& format, int flags)
 	{
 		const lua_Number	v1{ v[1].get<std::optional<lua_Number>>().value_or(static_cast<lua_Number>(0)) },
 							v2{ v[2].get<std::optional<lua_Number>>().value_or(static_cast<lua_Number>(0)) };
 		float value[2] = { float(v1), float(v2) };
-		bool used = ImGui::SliderFloat2(label.c_str(), value, v_min, v_max, format.c_str(), power);
+		bool used = ImGui::SliderFloat2(label.c_str(), value, v_min, v_max, format.c_str(), (ImGuiSliderFlags)flags);
 
 		sol::as_table_t float2 = sol::as_table(std::vector<float>{
 			value[0], value[1]
@@ -816,13 +866,13 @@ namespace sol_ImGui
 
 		return std::make_tuple(float3, used);
 	}
-	inline std::tuple<sol::as_table_t<std::vector<float>>, bool> SliderFloat3(const std::string& label, const sol::table& v, float v_min, float v_max, const std::string& format, float power)
+	inline std::tuple<sol::as_table_t<std::vector<float>>, bool> SliderFloat3(const std::string& label, const sol::table& v, float v_min, float v_max, const std::string& format, int flags)
 	{
 		const lua_Number	v1{ v[1].get<std::optional<lua_Number>>().value_or(static_cast<lua_Number>(0)) },
 							v2{ v[2].get<std::optional<lua_Number>>().value_or(static_cast<lua_Number>(0)) },
 							v3{ v[3].get<std::optional<lua_Number>>().value_or(static_cast<lua_Number>(0)) };
 		float value[3] = { float(v1), float(v2), float(v3) };
-		bool used = ImGui::SliderFloat3(label.c_str(), value, v_min, v_max, format.c_str(), power);
+		bool used = ImGui::SliderFloat3(label.c_str(), value, v_min, v_max, format.c_str(), (ImGuiSliderFlags)flags);
 
 		sol::as_table_t float3 = sol::as_table(std::vector<float>{
 			value[0], value[1], value[3]
@@ -860,14 +910,14 @@ namespace sol_ImGui
 
 		return std::make_tuple(float4, used);
 	}
-	inline std::tuple<sol::as_table_t<std::vector<float>>, bool> SliderFloat4(const std::string& label, const sol::table& v, float v_min, float v_max, const std::string& format, float power)
+	inline std::tuple<sol::as_table_t<std::vector<float>>, bool> SliderFloat4(const std::string& label, const sol::table& v, float v_min, float v_max, const std::string& format, int flags)
 	{
 		const lua_Number	v1{ v[1].get<std::optional<lua_Number>>().value_or(static_cast<lua_Number>(0)) },
 							v2{ v[2].get<std::optional<lua_Number>>().value_or(static_cast<lua_Number>(0)) },
 							v3{ v[3].get<std::optional<lua_Number>>().value_or(static_cast<lua_Number>(0)) },
 							v4{ v[4].get<std::optional<lua_Number>>().value_or(static_cast<lua_Number>(0)) };
 		float value[4] = { float(v1), float(v2), float(v3), float(v4) };
-		bool used = ImGui::SliderFloat4(label.c_str(), value, v_min, v_max, format.c_str(), power);
+		bool used = ImGui::SliderFloat4(label.c_str(), value, v_min, v_max, format.c_str(), (ImGuiSliderFlags)flags);
 
 		sol::as_table_t float4 = sol::as_table(std::vector<float>{
 			value[0], value[1], value[2], value[3]
@@ -879,8 +929,10 @@ namespace sol_ImGui
 	inline std::tuple<float, bool> SliderAngle(const std::string& label, float v_rad, float v_degrees_min)																				{ bool used = ImGui::SliderAngle(label.c_str(), &v_rad, v_degrees_min); return std::make_tuple(v_rad, used); }
 	inline std::tuple<float, bool> SliderAngle(const std::string& label, float v_rad, float v_degrees_min, float v_degrees_max)															{ bool used = ImGui::SliderAngle(label.c_str(), &v_rad, v_degrees_min, v_degrees_max); return std::make_tuple(v_rad, used); }
 	inline std::tuple<float, bool> SliderAngle(const std::string& label, float v_rad, float v_degrees_min, float v_degrees_max, const std::string& format)								{ bool used = ImGui::SliderAngle(label.c_str(), &v_rad, v_degrees_min, v_degrees_max, format.c_str()); return std::make_tuple(v_rad, used); }
+	inline std::tuple<float, bool> SliderAngle(const std::string& label, float v_rad, float v_degrees_min, float v_degrees_max, const std::string& format, int flags)					{ bool used = ImGui::SliderAngle(label.c_str(), &v_rad, v_degrees_min, v_degrees_max, format.c_str(), (ImGuiSliderFlags)flags); return std::make_tuple(v_rad, used); }
 	inline std::tuple<int, bool> SliderInt(const std::string& label, int v, int v_min, int v_max)																						{ bool used = ImGui::SliderInt(label.c_str(), &v, v_min, v_max); return std::make_tuple(v, used); }
 	inline std::tuple<int, bool> SliderInt(const std::string& label, int v, int v_min, int v_max, const std::string& format)															{ bool used = ImGui::SliderInt(label.c_str(), &v, v_min, v_max, format.c_str()); return std::make_tuple(v, used); }
+	inline std::tuple<int, bool> SliderInt(const std::string& label, int v, int v_min, int v_max, const std::string& format, int flags)													{ bool used = ImGui::SliderInt(label.c_str(), &v, v_min, v_max, format.c_str(), (ImGuiSliderFlags)flags); return std::make_tuple(v, used); }
 	inline std::tuple<sol::as_table_t<std::vector<int>>, bool> SliderInt2(const std::string& label, const sol::table& v, int v_min, int v_max)
 	{
 		const lua_Number	v1{ v[1].get<std::optional<lua_Number>>().value_or(static_cast<lua_Number>(0)) },
@@ -900,6 +952,19 @@ namespace sol_ImGui
 							v2{ v[2].get<std::optional<lua_Number>>().value_or(static_cast<lua_Number>(0)) };
 		int value[2] = { int(v1), int(v2) };
 		bool used = ImGui::SliderInt2(label.c_str(), value, v_min, v_max, format.c_str());
+
+		sol::as_table_t int2 = sol::as_table(std::vector<int>{
+			value[0], value[1]
+		});
+
+		return std::make_tuple(int2, used);
+	}
+	inline std::tuple<sol::as_table_t<std::vector<int>>, bool> SliderInt2(const std::string& label, const sol::table& v, int v_min, int v_max, const std::string& format, int flags)
+	{
+		const lua_Number	v1{ v[1].get<std::optional<lua_Number>>().value_or(static_cast<lua_Number>(0)) },
+							v2{ v[2].get<std::optional<lua_Number>>().value_or(static_cast<lua_Number>(0)) };
+		int value[2] = { int(v1), int(v2) };
+		bool used = ImGui::SliderInt2(label.c_str(), value, v_min, v_max, format.c_str(), (ImGuiSliderFlags)flags);
 
 		sol::as_table_t int2 = sol::as_table(std::vector<int>{
 			value[0], value[1]
@@ -928,6 +993,20 @@ namespace sol_ImGui
 							v3{ v[3].get<std::optional<lua_Number>>().value_or(static_cast<lua_Number>(0)) };
 		int value[3] = { int(v1), int(v2), int(v3) };
 		bool used = ImGui::SliderInt3(label.c_str(), value, v_min, v_max, format.c_str());
+
+		sol::as_table_t int3 = sol::as_table(std::vector<int>{
+			value[0], value[1], value[2]
+		});
+
+		return std::make_tuple(int3, used);
+	}
+	inline std::tuple<sol::as_table_t<std::vector<int>>, bool> SliderInt3(const std::string& label, const sol::table& v, int v_min, int v_max, const std::string& format, int flags)
+	{
+		const lua_Number	v1{ v[1].get<std::optional<lua_Number>>().value_or(static_cast<lua_Number>(0)) },
+							v2{ v[2].get<std::optional<lua_Number>>().value_or(static_cast<lua_Number>(0)) },
+							v3{ v[3].get<std::optional<lua_Number>>().value_or(static_cast<lua_Number>(0)) };
+		int value[3] = { int(v1), int(v2), int(v3) };
+		bool used = ImGui::SliderInt3(label.c_str(), value, v_min, v_max, format.c_str(), (ImGuiSliderFlags)flags);
 
 		sol::as_table_t int3 = sol::as_table(std::vector<int>{
 			value[0], value[1], value[2]
@@ -965,23 +1044,39 @@ namespace sol_ImGui
 
 		return std::make_tuple(int4, used);
 	}
+	inline std::tuple<sol::as_table_t<std::vector<int>>, bool> SliderInt4(const std::string& label, const sol::table& v, int v_min, int v_max, const std::string& format, int flags)
+	{
+		const lua_Number	v1{ v[1].get<std::optional<lua_Number>>().value_or(static_cast<lua_Number>(0)) },
+							v2{ v[2].get<std::optional<lua_Number>>().value_or(static_cast<lua_Number>(0)) },
+							v3{ v[3].get<std::optional<lua_Number>>().value_or(static_cast<lua_Number>(0)) },
+							v4{ v[4].get<std::optional<lua_Number>>().value_or(static_cast<lua_Number>(0)) };
+		int value[4] = { int(v1), int(v2), int(v3), int(v4) };
+		bool used = ImGui::SliderInt4(label.c_str(), value, v_min, v_max, format.c_str(), (ImGuiSliderFlags)flags);
+
+		sol::as_table_t int4 = sol::as_table(std::vector<int>{
+			value[0], value[1], value[2], value[3]
+		});
+
+		return std::make_tuple(int4, used);
+	}
 	inline void SliderScalar()																																							{ /* TODO: SliderScalar(...) ==> UNSUPPORTED */ }
 	inline void SliderScalarN()																																							{ /* TODO: SliderScalarN(...) ==> UNSUPPORTED */ }
 	inline std::tuple<float, bool> VSliderFloat(const std::string& label, float sizeX, float sizeY, float v, float v_min, float v_max)													{ bool used = ImGui::VSliderFloat(label.c_str(), { sizeX, sizeY }, &v, v_min, v_max); return std::make_tuple(v, used); }
 	inline std::tuple<float, bool> VSliderFloat(const std::string& label, float sizeX, float sizeY, float v, float v_min, float v_max, const std::string& format)						{ bool used = ImGui::VSliderFloat(label.c_str(), { sizeX, sizeY }, &v, v_min, v_max, format.c_str()); return std::make_tuple(v, used); }
-	inline std::tuple<float, bool> VSliderFloat(const std::string& label, float sizeX, float sizeY, float v, float v_min, float v_max, const std::string& format, float power)			{ bool used = ImGui::VSliderFloat(label.c_str(), { sizeX, sizeY }, &v, v_min, v_max, format.c_str(), power); return std::make_tuple(v, used); }
+	inline std::tuple<float, bool> VSliderFloat(const std::string& label, float sizeX, float sizeY, float v, float v_min, float v_max, const std::string& format, int flags)			{ bool used = ImGui::VSliderFloat(label.c_str(), { sizeX, sizeY }, &v, v_min, v_max, format.c_str(), (ImGuiSliderFlags)flags); return std::make_tuple(v, used); }
 	inline std::tuple<int, bool> VSliderInt(const std::string& label, float sizeX, float sizeY, int v, int v_min, int v_max)															{ bool used = ImGui::VSliderInt(label.c_str(), { sizeX, sizeY }, &v, v_min, v_max); return std::make_tuple(v, used); }
 	inline std::tuple<int, bool> VSliderInt(const std::string& label, float sizeX, float sizeY, int v, int v_min, int v_max, const std::string& format)									{ bool used = ImGui::VSliderInt(label.c_str(), { sizeX, sizeY }, &v, v_min, v_max, format.c_str()); return std::make_tuple(v, used); }
+	inline std::tuple<int, bool> VSliderInt(const std::string& label, float sizeX, float sizeY, int v, int v_min, int v_max, const std::string& format, int flags)						{ bool used = ImGui::VSliderInt(label.c_str(), { sizeX, sizeY }, &v, v_min, v_max, format.c_str(), (ImGuiSliderFlags)flags); return std::make_tuple(v, used); }
 	inline void VSliderScalar()																																							{ /* TODO: VSliderScalar(...) ==> UNSUPPORTED */ }
 
 	// Widgets: Input with Keyboard
-	inline std::tuple<std::string, bool> InputText(const std::string& label, std::string text, unsigned int buf_size)																	{ bool selected = ImGui::InputText(label.c_str(), &text[0], buf_size); return std::make_tuple(text, selected); }
-	inline std::tuple<std::string, bool> InputText(const std::string& label, std::string text, unsigned int buf_size, int flags)														{ bool selected = ImGui::InputText(label.c_str(), &text[0], buf_size, static_cast<ImGuiInputTextFlags>(flags)); return std::make_tuple(text, selected); }
-	inline std::tuple<std::string, bool> InputTextMultiline(const std::string& label, std::string text, unsigned int buf_size)															{ bool selected = ImGui::InputTextMultiline(label.c_str(), &text[0], buf_size); return std::make_tuple(text, selected); }
-	inline std::tuple<std::string, bool> InputTextMultiline(const std::string& label, std::string text, unsigned int buf_size, float sizeX, float sizeY)								{ bool selected = ImGui::InputTextMultiline(label.c_str(), &text[0], buf_size, { sizeX, sizeY }); return std::make_tuple(text, selected); }
-	inline std::tuple<std::string, bool> InputTextMultiline(const std::string& label, std::string text, unsigned int buf_size, float sizeX, float sizeY, int flags)						{ bool selected = ImGui::InputTextMultiline(label.c_str(), &text[0], buf_size, { sizeX, sizeY }, static_cast<ImGuiInputTextFlags>(flags)); return std::make_tuple(text, selected); }
-	inline std::tuple<std::string, bool> InputTextWithHint(const std::string& label, const std::string& hint, std::string text, unsigned int buf_size)									{ bool selected = ImGui::InputTextWithHint(label.c_str(), hint.c_str(), &text[0], buf_size); return std::make_tuple(text, selected); }
-	inline std::tuple<std::string, bool> InputTextWithHint(const std::string& label, const std::string& hint, std::string text, unsigned int buf_size, int flags)						{ bool selected = ImGui::InputTextWithHint(label.c_str(), hint.c_str(), &text[0], buf_size, static_cast<ImGuiInputTextFlags>(flags)); return std::make_tuple(text, selected); }
+	inline std::tuple<std::string, bool> InputText(const std::string& label, std::string text)																							{ bool selected = ImGui::InputText(label.c_str(), &text); return std::make_tuple(text, selected); }
+	inline std::tuple<std::string, bool> InputText(const std::string& label, std::string text, int flags)																				{ bool selected = ImGui::InputText(label.c_str(), &text, static_cast<ImGuiInputTextFlags>(flags)); return std::make_tuple(text, selected); }
+	inline std::tuple<std::string, bool> InputTextMultiline(const std::string& label, std::string text)																					{ bool selected = ImGui::InputTextMultiline(label.c_str(), &text); return std::make_tuple(text, selected); }
+	inline std::tuple<std::string, bool> InputTextMultiline(const std::string& label, std::string text, float sizeX, float sizeY)														{ bool selected = ImGui::InputTextMultiline(label.c_str(), &text, { sizeX, sizeY }); return std::make_tuple(text, selected); }
+	inline std::tuple<std::string, bool> InputTextMultiline(const std::string& label, std::string text, float sizeX, float sizeY, int flags)											{ bool selected = ImGui::InputTextMultiline(label.c_str(), &text, { sizeX, sizeY }, static_cast<ImGuiInputTextFlags>(flags)); return std::make_tuple(text, selected); }
+	inline std::tuple<std::string, bool> InputTextWithHint(const std::string& label, const std::string& hint, std::string text)															{ bool selected = ImGui::InputTextWithHint(label.c_str(), hint.c_str(), &text); return std::make_tuple(text, selected); }
+	inline std::tuple<std::string, bool> InputTextWithHint(const std::string& label, const std::string& hint, std::string text, int flags)												{ bool selected = ImGui::InputTextWithHint(label.c_str(), hint.c_str(), &text, static_cast<ImGuiInputTextFlags>(flags)); return std::make_tuple(text, selected); }
 	inline std::tuple<float, bool> InputFloat(const std::string& label, float v)																										{ bool selected = ImGui::InputFloat(label.c_str(), &v); return std::make_tuple(v, selected); }
 	inline std::tuple<float, bool> InputFloat(const std::string& label, float v, float step)																							{ bool selected = ImGui::InputFloat(label.c_str(), &v, step); return std::make_tuple(v, selected); }
 	inline std::tuple<float, bool> InputFloat(const std::string& label, float v, float step, float step_fast)																			{ bool selected = ImGui::InputFloat(label.c_str(), &v, step, step_fast); return std::make_tuple(v, selected); }
@@ -1414,10 +1509,9 @@ namespace sol_ImGui
 		bool clicked = ImGui::ListBox(label.c_str(), &current_item, cstrings.data(), items_count, height_in_items);
 		return std::make_tuple(current_item, clicked);
 	}
-	inline bool ListBoxHeader(const std::string& label, float sizeX, float sizeY)						{ return ImGui::ListBoxHeader(label.c_str(), { sizeX, sizeY }); }
-	inline bool ListBoxHeader(const std::string& label, int items_count)								{ return ImGui::ListBoxHeader(label.c_str(), items_count); }
-	inline bool ListBoxHeader(const std::string& label, int items_count, int height_in_items)			{ return ImGui::ListBoxHeader(label.c_str(), items_count, height_in_items); }
-	inline void ListBoxFooter()																			{ ImGui::ListBoxFooter(); }
+	inline bool BeginListBox(const std::string& label, float sizeX, float sizeY)						{ return ImGui::BeginListBox(label.c_str(), { sizeX, sizeY }); }
+	inline bool BeginListBox(const std::string& label)													{ return ImGui::BeginListBox(label.c_str()); }
+	inline void EndListBox()																			{ ImGui::EndListBox(); }
 
 	// Widgets: Data Plotting
 	/* TODO: Widgets Data Plotting ==> UNSUPPORTED (barely used and quite long functions) */
@@ -1457,9 +1551,6 @@ namespace sol_ImGui
 	inline void EndPopup()																				{ ImGui::EndPopup(); }
 	inline void OpenPopup(const std::string& str_id)													{ ImGui::OpenPopup(str_id.c_str()); }
 	inline void OpenPopup(const std::string& str_id, int popup_flags)									{ ImGui::OpenPopup(str_id.c_str(), static_cast<ImGuiPopupFlags>(popup_flags)); }
-	inline bool OpenPopupContextItem()																	{ return ImGui::OpenPopupContextItem(); }
-	inline bool OpenPopupContextItem(const std::string& str_id)											{ return ImGui::OpenPopupContextItem(str_id.c_str()); }
-	inline bool OpenPopupContextItem(const std::string& str_id, int popup_flags)						{ return ImGui::OpenPopupContextItem(str_id.c_str(), static_cast<ImGuiPopupFlags>(popup_flags)); }
 	inline void CloseCurrentPopup()																		{ ImGui::CloseCurrentPopup(); }
 	inline bool BeginPopupContextItem()																	{ return ImGui::BeginPopupContextItem(); }
 	inline bool BeginPopupContextItem(const std::string& str_id)										{ return ImGui::BeginPopupContextItem(str_id.c_str()); }
@@ -1552,7 +1643,7 @@ namespace sol_ImGui
 	inline std::tuple<float, float> GetItemRectMin()													{ const auto vec2{ ImGui::GetItemRectMin() }; return std::make_tuple(vec2.x, vec2.y); }
 	inline std::tuple<float, float> GetItemRectMax()													{ const auto vec2{ ImGui::GetItemRectMax() }; return std::make_tuple(vec2.x, vec2.y); }
 	inline std::tuple<float, float> GetItemRectSize()													{ const auto vec2{ ImGui::GetItemRectSize() }; return std::make_tuple(vec2.x, vec2.y); }
-	inline void SetItemAllowOverlap()																	{ ImGui::SetItemAllowOverlap(); }
+	inline void SetNextItemAllowOverlap()																{ ImGui::SetNextItemAllowOverlap(); }
 
 	// Miscellaneous Utilities
 	inline bool IsRectVisible(float sizeX, float sizeY)													{ return ImGui::IsRectVisible({ sizeX, sizeY }); }
@@ -1562,9 +1653,9 @@ namespace sol_ImGui
 	/* TODO: GetBackgroundDrawList(), GetForeGroundDrawList(), GetDrawListSharedData() ==> UNSUPPORTED */
 	inline std::string GetStyleColorName(int idx)														{ return std::string(ImGui::GetStyleColorName(static_cast<ImGuiCol>(idx))); }
 	/* TODO: SetStateStorage(), GetStateStorage(), CalcListClipping() ==> UNSUPPORTED */
-	inline bool BeginChildFrame(unsigned int id, float sizeX, float sizeY)								{ return ImGui::BeginChildFrame(id, { sizeX, sizeY }); }
-	inline bool BeginChildFrame(unsigned int id, float sizeX, float sizeY, int flags)					{ return ImGui::BeginChildFrame(id, { sizeX, sizeY }, static_cast<ImGuiWindowFlags>(flags)); }
-	inline void EndChildFrame()																			{ return ImGui::EndChildFrame(); }
+	//inline bool BeginChild(unsigned int id, float sizeX, float sizeY)								{ return ImGui::BeginChild(id, { sizeX, sizeY }); }
+	//inline bool BeginChild(unsigned int id, float sizeX, float sizeY, int flags)					{ return ImGui::BeginChild(id, { sizeX, sizeY }, static_cast<ImGuiWindowFlags>(flags)); }
+	//inline void EndChild()																			{ return ImGui::EndChild(); }
 
 	// Text Utilities
 	inline std::tuple<float, float> CalcTextSize(const std::string& text)																					{ const auto vec2{ ImGui::CalcTextSize(text.c_str()) }; return std::make_tuple(vec2.x, vec2.y); }
@@ -1607,14 +1698,13 @@ namespace sol_ImGui
 	}
 
 	// Inputs Utilities: Keyboard
-	inline int GetKeyIndex(int imgui_key)																{ return ImGui::GetKeyIndex(static_cast<ImGuiKey>(imgui_key)); }
-	inline bool IsKeyDown(int user_key_index)															{ return ImGui::IsKeyDown(user_key_index); }
-	inline bool IsKeyPressed(int user_key_index)														{ return ImGui::IsKeyPressed(user_key_index); }
-	inline bool IsKeyPressed(int user_key_index, bool repeat)											{ return ImGui::IsKeyPressed(user_key_index, repeat); }
-	inline bool IsKeyReleased(int user_key_index)														{ return ImGui::IsKeyReleased(user_key_index); }
-	inline int GetKeyPressedAmount(int key_index, float repeat_delay, float rate)						{ return ImGui::GetKeyPressedAmount(key_index, repeat_delay, rate); }
-	inline void CaptureKeyboardFromApp()																{ ImGui::CaptureKeyboardFromApp(); }
-	inline void CaptureKeyboardFromApp(bool want_capture_keyboard_value)								{ ImGui::CaptureKeyboardFromApp(want_capture_keyboard_value); }
+	//inline int GetKeyIndex(int imgui_key)																{ return ImGui::GetKeyIndex(static_cast<ImGuiKey>(imgui_key)); }
+	inline bool IsKeyDown(int user_key_index)															{ return ImGui::IsKeyDown((ImGuiKey)user_key_index); }
+	inline bool IsKeyPressed(int user_key_index)														{ return ImGui::IsKeyPressed((ImGuiKey)user_key_index); }
+	inline bool IsKeyPressed(int user_key_index, bool repeat)											{ return ImGui::IsKeyPressed((ImGuiKey)user_key_index, repeat); }
+	inline bool IsKeyReleased(int user_key_index)														{ return ImGui::IsKeyReleased((ImGuiKey)user_key_index); }
+	inline int GetKeyPressedAmount(int key_index, float repeat_delay, float rate)						{ return ImGui::GetKeyPressedAmount((ImGuiKey)key_index, repeat_delay, rate); }
+	inline void SetNextFrameWantCaptureKeyboard(bool want_capture_keyboard_value)						{ ImGui::SetNextFrameWantCaptureKeyboard(want_capture_keyboard_value); }
 
 	// Inputs Utilities: Mouse
 	inline bool IsMouseDown(int button)																	{ return ImGui::IsMouseDown(static_cast<ImGuiMouseButton>(button)); }
@@ -1637,413 +1727,740 @@ namespace sol_ImGui
 	inline void ResetMouseDragDelta(int button)															{ ImGui::ResetMouseDragDelta(static_cast<ImGuiMouseButton>(button)); }
 	inline int GetMouseCursor()																			{ return ImGui::GetMouseCursor(); }
 	inline void SetMouseCursor(int cursor_type)															{ ImGui::SetMouseCursor(static_cast<ImGuiMouseCursor>(cursor_type)); }
-	inline void CaptureMouseFromApp()																	{ ImGui::CaptureMouseFromApp(); }
-	inline void CaptureMouseFromApp(bool want_capture_mouse_value)										{ ImGui::CaptureMouseFromApp(want_capture_mouse_value); }
+	inline void SetNextFrameWantCaptureMouse(bool want_capture_mouse) { ImGui::SetNextFrameWantCaptureMouse(want_capture_mouse); }
 
 	// Clipboard Utilities
 	inline std::string GetClipboardText()																{ return std::string(ImGui::GetClipboardText()); }
 	inline void SetClipboardText(const std::string& text)												{ ImGui::SetClipboardText(text.c_str()); }
 	
+// helper to fill enum values.
+#define ENUM_HELPER(prefix, val) #val , prefix##_##val
+
 	inline void InitEnums(sol::state& lua)
 	{
 #pragma region Window Flags
 		lua.new_enum("ImGuiWindowFlags",
-			"None"						, ImGuiWindowFlags_None,
-			"NoTitleBar"				, ImGuiWindowFlags_NoTitleBar,
-			"NoResize"					, ImGuiWindowFlags_NoResize,
-			"NoMove"					, ImGuiWindowFlags_NoMove,
-			"NoScrollbar"				, ImGuiWindowFlags_NoScrollbar,
-			"NoScrollWithMouse"			, ImGuiWindowFlags_NoScrollWithMouse,
-			"NoCollapse"				, ImGuiWindowFlags_NoCollapse,
-			"AlwaysAutoResize"			, ImGuiWindowFlags_AlwaysAutoResize,
-			"NoBackground"				, ImGuiWindowFlags_NoBackground,
-			"NoSavedSettings"			, ImGuiWindowFlags_NoSavedSettings,
-			"NoMouseInputs"				, ImGuiWindowFlags_NoMouseInputs,
-			"MenuBar"					, ImGuiWindowFlags_MenuBar,
-			"HorizontalScrollbar"		, ImGuiWindowFlags_HorizontalScrollbar,
-			"NoFocusOnAppearing"		, ImGuiWindowFlags_NoFocusOnAppearing,
-			"NoBringToFrontOnFocus"		, ImGuiWindowFlags_NoBringToFrontOnFocus,
-			"AlwaysVerticalScrollbar"	, ImGuiWindowFlags_AlwaysVerticalScrollbar,
-			"AlwaysHorizontalScrollbar"	, ImGuiWindowFlags_AlwaysHorizontalScrollbar,
-			"AlwaysUseWindowPadding"	, ImGuiWindowFlags_AlwaysUseWindowPadding,
-			"NoNavInputs"				, ImGuiWindowFlags_NoNavInputs,
-			"NoNavFocus"				, ImGuiWindowFlags_NoNavFocus,
-			"UnsavedDocument"			, ImGuiWindowFlags_UnsavedDocument,
-			"NoDocking"					, ImGuiWindowFlags_NoDocking,
-
-			"NoNav"						, ImGuiWindowFlags_NoNav,
-			"NoDecoration"				, ImGuiWindowFlags_NoDecoration,
-			"NoInputs"					, ImGuiWindowFlags_NoInputs,
-
-			"NavFlattened"				, ImGuiWindowFlags_NavFlattened,
-			"ChildWindow"				, ImGuiWindowFlags_ChildWindow,
-			"Tooltip"					, ImGuiWindowFlags_Tooltip,
-			"Popup"						, ImGuiWindowFlags_Popup,
-			"Modal"						, ImGuiWindowFlags_Modal,
-			"ChildMenu"					, ImGuiWindowFlags_ChildMenu,
-
-#ifdef CUSTOM_IMGUI
-			"DockNodeHost"				, ImGuiWindowFlags_DockNodeHost,
-			"NoClose"					, ImGuiWindowFlags_NoClose,
-			"NoDockTab"					, ImGuiWindowFlags_NoDockTab
-#else
-			"DockNodeHost"				, ImGuiWindowFlags_DockNodeHost
-#endif
+			ENUM_HELPER(ImGuiWindowFlags, None),
+			ENUM_HELPER(ImGuiWindowFlags, NoTitleBar),
+			ENUM_HELPER(ImGuiWindowFlags, NoResize),
+			ENUM_HELPER(ImGuiWindowFlags, NoMove),
+			ENUM_HELPER(ImGuiWindowFlags, NoScrollbar),
+			ENUM_HELPER(ImGuiWindowFlags, NoScrollWithMouse),
+			ENUM_HELPER(ImGuiWindowFlags, NoCollapse),
+			ENUM_HELPER(ImGuiWindowFlags, AlwaysAutoResize),
+			ENUM_HELPER(ImGuiWindowFlags, NoBackground),
+			ENUM_HELPER(ImGuiWindowFlags, NoSavedSettings),
+			ENUM_HELPER(ImGuiWindowFlags, NoMouseInputs),
+			ENUM_HELPER(ImGuiWindowFlags, MenuBar),
+			ENUM_HELPER(ImGuiWindowFlags, HorizontalScrollbar),
+			ENUM_HELPER(ImGuiWindowFlags, NoFocusOnAppearing),
+			ENUM_HELPER(ImGuiWindowFlags, NoBringToFrontOnFocus),
+			ENUM_HELPER(ImGuiWindowFlags, AlwaysVerticalScrollbar),
+			ENUM_HELPER(ImGuiWindowFlags, AlwaysHorizontalScrollbar),
+			ENUM_HELPER(ImGuiWindowFlags, NoNavInputs),
+			ENUM_HELPER(ImGuiWindowFlags, NoNavFocus),
+			ENUM_HELPER(ImGuiWindowFlags, UnsavedDocument),
+			ENUM_HELPER(ImGuiWindowFlags, NoDocking),
+			ENUM_HELPER(ImGuiWindowFlags, NoNav),
+			ENUM_HELPER(ImGuiWindowFlags, NoDecoration),
+			ENUM_HELPER(ImGuiWindowFlags, NoInputs),
+			ENUM_HELPER(ImGuiWindowFlags, ChildWindow),
+			ENUM_HELPER(ImGuiWindowFlags, Tooltip),
+			ENUM_HELPER(ImGuiWindowFlags, Popup),
+			ENUM_HELPER(ImGuiWindowFlags, Modal),
+			ENUM_HELPER(ImGuiWindowFlags, ChildMenu),
+			ENUM_HELPER(ImGuiWindowFlags, DockNodeHost)
 		);
 #pragma endregion Window Flags
 
-#pragma region Focused Flags
-		lua.new_enum("ImGuiFocusedFlags",
-			"None"						, ImGuiFocusedFlags_None,
-			"ChildWindows"				, ImGuiFocusedFlags_ChildWindows,
-			"RootWindow"				, ImGuiFocusedFlags_RootWindow,
-			"AnyWindow"					, ImGuiFocusedFlags_AnyWindow,
-			"RootAndChildWindows"		, ImGuiFocusedFlags_RootAndChildWindows
+#pragma region Child Flags
+		lua.new_enum("ImGuiChildFlags",
+			ENUM_HELPER(ImGuiChildFlags, None),
+			ENUM_HELPER(ImGuiChildFlags, Border),
+			ENUM_HELPER(ImGuiChildFlags, AlwaysUseWindowPadding),
+			ENUM_HELPER(ImGuiChildFlags, ResizeX),
+			ENUM_HELPER(ImGuiChildFlags, ResizeY),
+			ENUM_HELPER(ImGuiChildFlags, AutoResizeX),
+			ENUM_HELPER(ImGuiChildFlags, AutoResizeY),
+			ENUM_HELPER(ImGuiChildFlags, AlwaysAutoResize),
+			ENUM_HELPER(ImGuiChildFlags, FrameStyle),
+			ENUM_HELPER(ImGuiChildFlags, NavFlattened)
 		);
-#pragma endregion Focused Flags
+#pragma endregion Child Flags
 
-#pragma region Hovered Flags
-		lua.new_enum("ImGuiHoveredFlags",
-			"None"						, ImGuiHoveredFlags_None,
-			"ChildWindows"				, ImGuiHoveredFlags_ChildWindows,
-			"RootWindow"				, ImGuiHoveredFlags_RootWindow,
-			"AnyWindow"					, ImGuiHoveredFlags_AnyWindow,
-			"AllowWhenBlockedByPopup"	, ImGuiHoveredFlags_AllowWhenBlockedByPopup,
-			"AllowWhenBlockedByActiveItem", ImGuiHoveredFlags_AllowWhenBlockedByActiveItem,
-			"AllowWhenOverlapped"		, ImGuiHoveredFlags_AllowWhenOverlapped,
-			"AllowWhenDisabled"			, ImGuiHoveredFlags_AllowWhenDisabled,
-			"RectOnly"					, ImGuiHoveredFlags_RectOnly,
-			"RootAndChildWindows"		, ImGuiHoveredFlags_RootAndChildWindows
+#pragma region Item Flags
+		lua.new_enum("ImGuiItemFlags",
+			ENUM_HELPER(ImGuiItemFlags, None),
+			ENUM_HELPER(ImGuiItemFlags, NoTabStop),
+			ENUM_HELPER(ImGuiItemFlags, NoNav),
+			ENUM_HELPER(ImGuiItemFlags, NoNavDefaultFocus),
+			ENUM_HELPER(ImGuiItemFlags, ButtonRepeat),
+			ENUM_HELPER(ImGuiItemFlags, AutoClosePopups)
 		);
-#pragma endregion Hovered Flags
 
-#pragma region Cond
-		lua.new_enum("ImGuiCond",
-			"None"						, ImGuiCond_None,
-			"Always"					, ImGuiCond_Always,
-			"Once"						, ImGuiCond_Once,
-			"FirstUseEver"				, ImGuiCond_FirstUseEver,
-			"Appearing"					, ImGuiCond_Appearing
-		);
-#pragma endregion Cond
-
-#pragma region Col
-		lua.new_enum("ImGuiCol",
-			"Text"						, ImGuiCol_Text,
-			"TextDisabled"				, ImGuiCol_TextDisabled,
-			"WindowBg"					, ImGuiCol_WindowBg,
-			"ChildBg"					, ImGuiCol_ChildBg,
-			"PopupBg"					, ImGuiCol_PopupBg,
-			"Border"					, ImGuiCol_Border,
-			"BorderShadow"				, ImGuiCol_BorderShadow,
-			"FrameBg"					, ImGuiCol_FrameBg,
-			"FrameBgHovered"			, ImGuiCol_FrameBgHovered,
-			"FrameBgActive"				, ImGuiCol_FrameBgActive,
-			"TitleBg"					, ImGuiCol_TitleBg,
-			"TitleBgActive"				, ImGuiCol_TitleBgActive,
-			"TitleBgCollapsed"			, ImGuiCol_TitleBgCollapsed,
-			"MenuBarBg"					, ImGuiCol_MenuBarBg,
-			"ScrollbarBg"				, ImGuiCol_ScrollbarBg,
-			"ScrollbarGrab"				, ImGuiCol_ScrollbarGrab,
-			"ScrollbarGrabHovered"		, ImGuiCol_ScrollbarGrabHovered,
-			"ScrollbarGrabActive"		, ImGuiCol_ScrollbarGrabActive,
-			"CheckMark"					, ImGuiCol_CheckMark,
-			"SliderGrab"				, ImGuiCol_SliderGrab,
-			"SliderGrabActive"			, ImGuiCol_SliderGrabActive,
-			"Button"					, ImGuiCol_Button,
-			"ButtonHovered"				, ImGuiCol_ButtonHovered,
-			"ButtonActive"				, ImGuiCol_ButtonActive,
-			"Header"					, ImGuiCol_Header,
-			"HeaderHovered"				, ImGuiCol_HeaderHovered,
-			"HeaderActive"				, ImGuiCol_HeaderActive,
-			"Separator"					, ImGuiCol_Separator,
-			"SeparatorHovered"			, ImGuiCol_SeparatorHovered,
-			"SeparatorActive"			, ImGuiCol_SeparatorActive,
-			"ResizeGrip"				, ImGuiCol_ResizeGrip,
-			"ResizeGripHovered"			, ImGuiCol_ResizeGripHovered,
-			"ResizeGripActive"			, ImGuiCol_ResizeGripActive,
-			"Tab"						, ImGuiCol_Tab,
-			"TabHovered"				, ImGuiCol_TabHovered,
-			"TabActive"					, ImGuiCol_TabActive,
-			"TabUnfocused"				, ImGuiCol_TabUnfocused,
-			"TabUnfocusedActive"		, ImGuiCol_TabUnfocusedActive,
-			"DockingPreview"			, ImGuiCol_DockingPreview,
-			"DockingEmptyBg"			, ImGuiCol_DockingEmptyBg,
-			"PlotLines"					, ImGuiCol_PlotLines,
-			"PlotLinesHovered"			, ImGuiCol_PlotLinesHovered,
-			"PlotHistogram"				, ImGuiCol_PlotHistogram,
-			"PlotHistogramHovered"		, ImGuiCol_PlotHistogramHovered,
-			"TextSelectedBg"			, ImGuiCol_TextSelectedBg,
-			"DragDropTarget"			, ImGuiCol_DragDropTarget,
-			"NavHighlight"				, ImGuiCol_NavHighlight,
-			"NavWindowingHighlight"		, ImGuiCol_NavWindowingHighlight,
-			"NavWindowingDimBg"			, ImGuiCol_NavWindowingDimBg,
-			"ModalWindowDimBg"			, ImGuiCol_ModalWindowDimBg,
-			"ModalWindowDarkening"		, ImGuiCol_ModalWindowDimBg,
-			"COUNT"						, ImGuiCol_COUNT
-		);
-#pragma endregion Col
-
-#pragma region Style
-		lua.new_enum("ImGuiStyleVar",
-			"Alpha"						, ImGuiStyleVar_Alpha,
-			"WindowPadding"				, ImGuiStyleVar_WindowPadding,
-			"WindowRounding"			, ImGuiStyleVar_WindowRounding,
-			"WindowBorderSize"			, ImGuiStyleVar_WindowBorderSize,
-			"WindowMinSize"				, ImGuiStyleVar_WindowMinSize,
-			"WindowTitleAlign"			, ImGuiStyleVar_WindowTitleAlign,
-			"ChildRounding"				, ImGuiStyleVar_ChildRounding,
-			"ChildBorderSize"			, ImGuiStyleVar_ChildBorderSize,
-			"PopupRounding"				, ImGuiStyleVar_PopupRounding,
-			"PopupBorderSize"			, ImGuiStyleVar_PopupBorderSize,
-			"FramePadding"				, ImGuiStyleVar_FramePadding,
-			"FrameRounding"				, ImGuiStyleVar_FrameRounding,
-			"FrameBorderSize"			, ImGuiStyleVar_FrameBorderSize,
-			"ItemSpacing"				, ImGuiStyleVar_ItemSpacing,
-			"ItemInnerSpacing"			, ImGuiStyleVar_ItemInnerSpacing,
-			"IndentSpacing"				, ImGuiStyleVar_IndentSpacing,
-			"ScrollbarSize"				, ImGuiStyleVar_ScrollbarSize,
-			"ScrollbarRounding"			, ImGuiStyleVar_ScrollbarRounding,
-			"GrabMinSize"				, ImGuiStyleVar_GrabMinSize,
-			"GrabRounding"				, ImGuiStyleVar_GrabRounding,
-			"TabRounding"				, ImGuiStyleVar_TabRounding,
-			"SelectableRounding"		, ImGuiStyleVar_SelectableRounding,
-			"SelectableTextAlign"		, ImGuiStyleVar_SelectableTextAlign,
-			"ButtonTextAlign"			, ImGuiStyleVar_ButtonTextAlign,
-			"COUNT"						, ImGuiStyleVar_COUNT
-		);
-#pragma endregion Style
-
-#pragma region Dir
-		lua.new_enum("ImGuiDir",
-			"None"						, ImGuiDir_None,
-			"Left"						, ImGuiDir_Left,
-			"Right"						, ImGuiDir_Right,
-			"Up"						, ImGuiDir_Up,
-			"Down"						, ImGuiDir_Down,
-			"COUNT"						, ImGuiDir_COUNT
-		);
-#pragma endregion Dir
-
-#pragma region Combo Flags
-		lua.new_enum("ImGuiComboFlags",
-			"None"					, ImGuiComboFlags_None,
-			"PopupAlignLeft"		, ImGuiComboFlags_PopupAlignLeft,
-			"HeightSmall"			, ImGuiComboFlags_HeightSmall,
-			"HeightRegular"			, ImGuiComboFlags_HeightRegular,
-			"HeightLarge"			, ImGuiComboFlags_HeightLarge,
-			"HeightLargest"			, ImGuiComboFlags_HeightLargest,
-			"NoArrowButton"			, ImGuiComboFlags_NoArrowButton,
-			"NoPreview"				, ImGuiComboFlags_NoPreview,
-			"HeightMask"			, ImGuiComboFlags_HeightMask_
-		);
-#pragma endregion Combo Flags
+#pragma endregion Item Flags
 
 #pragma region InputText Flags
 		lua.new_enum("ImGuiInputTextFlags",
-			"None"					, ImGuiInputTextFlags_None,
-			"CharsDecimal"			, ImGuiInputTextFlags_CharsDecimal,
-			"CharsHexadecimal"		, ImGuiInputTextFlags_CharsHexadecimal,
-			"CharsUppercase"		, ImGuiInputTextFlags_CharsUppercase,
-			"CharsNoBlank"			, ImGuiInputTextFlags_CharsNoBlank,
-			"AutoSelectAll"			, ImGuiInputTextFlags_AutoSelectAll,
-			"EnterReturnsTrue"		, ImGuiInputTextFlags_EnterReturnsTrue,
-			"CallbackCompletion"	, ImGuiInputTextFlags_CallbackCompletion,
-			"CallbackHistory"		, ImGuiInputTextFlags_CallbackHistory,
-			"CallbackAlways"		, ImGuiInputTextFlags_CallbackAlways,
-			"CallbackCharFilter"	, ImGuiInputTextFlags_CallbackCharFilter,
-			"AllowTabInput"			, ImGuiInputTextFlags_AllowTabInput,
-			"CtrlEnterForNewLine"	, ImGuiInputTextFlags_CtrlEnterForNewLine,
-			"NoHorizontalScroll"	, ImGuiInputTextFlags_NoHorizontalScroll,
-			"AlwaysInsertMode"		, ImGuiInputTextFlags_AlwaysInsertMode,
-			"ReadOnly"				, ImGuiInputTextFlags_ReadOnly,
-			"Password"				, ImGuiInputTextFlags_Password,
-			"NoUndoRedo"			, ImGuiInputTextFlags_NoUndoRedo,
-			"CharsScientific"		, ImGuiInputTextFlags_CharsScientific,
-			"CallbackResize"		, ImGuiInputTextFlags_CallbackResize,
-			"Multiline"				, ImGuiInputTextFlags_Multiline,
-			"NoMarkEdited"			, ImGuiInputTextFlags_NoMarkEdited
+			ENUM_HELPER(ImGuiInputTextFlags, None),
+			ENUM_HELPER(ImGuiInputTextFlags, CharsDecimal),
+			ENUM_HELPER(ImGuiInputTextFlags, CharsHexadecimal),
+			ENUM_HELPER(ImGuiInputTextFlags, CharsScientific),
+			ENUM_HELPER(ImGuiInputTextFlags, CharsUppercase),
+			ENUM_HELPER(ImGuiInputTextFlags, CharsNoBlank),
+			ENUM_HELPER(ImGuiInputTextFlags, AllowTabInput),
+			ENUM_HELPER(ImGuiInputTextFlags, EnterReturnsTrue),
+			ENUM_HELPER(ImGuiInputTextFlags, EscapeClearsAll),
+			ENUM_HELPER(ImGuiInputTextFlags, CtrlEnterForNewLine),
+			ENUM_HELPER(ImGuiInputTextFlags, ReadOnly),
+			ENUM_HELPER(ImGuiInputTextFlags, Password),
+			ENUM_HELPER(ImGuiInputTextFlags, AlwaysOverwrite),
+			ENUM_HELPER(ImGuiInputTextFlags, AutoSelectAll),
+			ENUM_HELPER(ImGuiInputTextFlags, ParseEmptyRefVal),
+			ENUM_HELPER(ImGuiInputTextFlags, DisplayEmptyRefVal),
+			ENUM_HELPER(ImGuiInputTextFlags, NoHorizontalScroll),
+			ENUM_HELPER(ImGuiInputTextFlags, NoUndoRedo),
+			ENUM_HELPER(ImGuiInputTextFlags, CallbackCompletion),
+			ENUM_HELPER(ImGuiInputTextFlags, CallbackHistory),
+			ENUM_HELPER(ImGuiInputTextFlags, CallbackAlways),
+			ENUM_HELPER(ImGuiInputTextFlags, CallbackCharFilter),
+			ENUM_HELPER(ImGuiInputTextFlags, CallbackResize),
+			ENUM_HELPER(ImGuiInputTextFlags, CallbackEdit)
 		);
 #pragma endregion InputText Flags
 
-#pragma region ColorEdit Flags
-		lua.new_enum("ImGuiColorEditFlags",
-			"None"					, ImGuiColorEditFlags_None,
-			"NoAlpha"				, ImGuiColorEditFlags_NoAlpha,
-			"NoPicker"				, ImGuiColorEditFlags_NoPicker,
-			"NoOptions"				, ImGuiColorEditFlags_NoOptions,
-			"NoSmallPreview"		, ImGuiColorEditFlags_NoSmallPreview,
-			"NoInputs"				, ImGuiColorEditFlags_NoInputs,
-			"NoTooltip"				, ImGuiColorEditFlags_NoTooltip,
-			"NoLabel"				, ImGuiColorEditFlags_NoLabel,
-			"NoSidePreview"			, ImGuiColorEditFlags_NoSidePreview,
-			"NoDragDrop"			, ImGuiColorEditFlags_NoDragDrop,
-			"NoBorder"				, ImGuiColorEditFlags_NoBorder,
-
-			"AlphaBar"				, ImGuiColorEditFlags_AlphaBar,
-			"AlphaPreview"			, ImGuiColorEditFlags_AlphaPreview,
-			"AlphaPreviewHalf"		, ImGuiColorEditFlags_AlphaPreviewHalf,
-			"HDR"					, ImGuiColorEditFlags_HDR,
-			"DisplayRGB"			, ImGuiColorEditFlags_DisplayRGB,
-			"DisplayHSV"			, ImGuiColorEditFlags_DisplayHSV,
-			"DisplayHex"			, ImGuiColorEditFlags_DisplayHex,
-			"Uint8"					, ImGuiColorEditFlags_Uint8,
-			"Float"					, ImGuiColorEditFlags_Float,
-			"PickerHueBar"			, ImGuiColorEditFlags_PickerHueBar,
-			"PickerHueWheel"		, ImGuiColorEditFlags_PickerHueWheel,
-			"InputRGB"				, ImGuiColorEditFlags_InputRGB,
-			"InputHSV"				, ImGuiColorEditFlags_InputHSV,
-
-			"_OptionsDefault"		, ImGuiColorEditFlags__OptionsDefault,
-
-			"_DisplayMask"			, ImGuiColorEditFlags__DisplayMask,
-			"_DataTypeMask"			, ImGuiColorEditFlags__DataTypeMask,
-			"_PickerMask"			, ImGuiColorEditFlags__PickerMask,
-			"_InputMask"			, ImGuiColorEditFlags__InputMask,
-
-			"RGB"					, ImGuiColorEditFlags_RGB
-		);
-#pragma endregion ColorEdit Flags
-
 #pragma region TreeNode Flags
 		lua.new_enum("ImGuiTreeNodeFlags",
-			"None"					, ImGuiTreeNodeFlags_None,
-			"Selected"				, ImGuiTreeNodeFlags_Selected,
-			"Framed"				, ImGuiTreeNodeFlags_Framed,
-			"AllowItemOverlap"		, ImGuiTreeNodeFlags_AllowItemOverlap,
-			"NoTreePushOnOpen"		, ImGuiTreeNodeFlags_NoTreePushOnOpen,
-			"NoAutoOpenOnLog"		, ImGuiTreeNodeFlags_NoAutoOpenOnLog,
-			"DefaultOpen"			, ImGuiTreeNodeFlags_DefaultOpen,
-			"OpenOnDoubleClick"		, ImGuiTreeNodeFlags_OpenOnDoubleClick,
-			"OpenOnArrow"			, ImGuiTreeNodeFlags_OpenOnArrow,
-			"Leaf"					, ImGuiTreeNodeFlags_Leaf,
-			"Bullet"				, ImGuiTreeNodeFlags_Bullet,
-			"FramePadding"			, ImGuiTreeNodeFlags_FramePadding,
-			"SpanAvailWidth"		, ImGuiTreeNodeFlags_SpanAvailWidth,
-			"SpanFullWidth"			, ImGuiTreeNodeFlags_SpanFullWidth,
-			"NavLeftJumpsBackHere"	, ImGuiTreeNodeFlags_NavLeftJumpsBackHere,
-			"CollapsingHeader"		, ImGuiTreeNodeFlags_CollapsingHeader
+			ENUM_HELPER(ImGuiTreeNodeFlags, None),
+			ENUM_HELPER(ImGuiTreeNodeFlags, Selected),
+			ENUM_HELPER(ImGuiTreeNodeFlags, Framed),
+			ENUM_HELPER(ImGuiTreeNodeFlags, AllowOverlap),
+			ENUM_HELPER(ImGuiTreeNodeFlags, NoTreePushOnOpen),
+			ENUM_HELPER(ImGuiTreeNodeFlags, NoAutoOpenOnLog),
+			ENUM_HELPER(ImGuiTreeNodeFlags, DefaultOpen),
+			ENUM_HELPER(ImGuiTreeNodeFlags, OpenOnDoubleClick),
+			ENUM_HELPER(ImGuiTreeNodeFlags, OpenOnArrow),
+			ENUM_HELPER(ImGuiTreeNodeFlags, Leaf),
+			ENUM_HELPER(ImGuiTreeNodeFlags, Bullet),
+			ENUM_HELPER(ImGuiTreeNodeFlags, FramePadding),
+			ENUM_HELPER(ImGuiTreeNodeFlags, SpanAvailWidth),
+			ENUM_HELPER(ImGuiTreeNodeFlags, SpanFullWidth),
+			ENUM_HELPER(ImGuiTreeNodeFlags, SpanTextWidth),
+			ENUM_HELPER(ImGuiTreeNodeFlags, SpanAllColumns),
+			ENUM_HELPER(ImGuiTreeNodeFlags, NavLeftJumpsBackHere),
+			ENUM_HELPER(ImGuiTreeNodeFlags, CollapsingHeader)
+			//ImGuiTreeNodeFlags_NoScrollOnOpen     = 1 << 16,  // FIXME: TODO: Disable automatic scroll on TreePop() if node got just open and contents is not visible
 		);
 #pragma endregion TreeNode Flags
 
-#pragma region Selectable Flags
-		lua.new_enum("ImGuiSelectableFlags",
-			"None"					, ImGuiSelectableFlags_None,
-			"DontClosePopups"		, ImGuiSelectableFlags_DontClosePopups,
-			"SpanAllColumns"		, ImGuiSelectableFlags_SpanAllColumns,
-			"AllowDoubleClick"		, ImGuiSelectableFlags_AllowDoubleClick,
-			"Disabled"				, ImGuiSelectableFlags_Disabled,
-			"AllowItemOverlap"		, ImGuiSelectableFlags_AllowItemOverlap
-		);
-#pragma endregion Selectable Flags
-
 #pragma region Popup Flags
 		lua.new_enum("ImGuiPopupFlags",
-			"None"					, ImGuiPopupFlags_None,
-			"MouseButtonLeft"		, ImGuiPopupFlags_MouseButtonLeft,
-			"MouseButtonRight"		, ImGuiPopupFlags_MouseButtonRight,
-			"MouseButtonMiddle"		, ImGuiPopupFlags_MouseButtonMiddle,
-			"MouseButtonMask_"		, ImGuiPopupFlags_MouseButtonMask_,
-			"MouseButtonDefault_"	, ImGuiPopupFlags_MouseButtonDefault_,
-			"NoOpenOverExistingPopup", ImGuiPopupFlags_NoOpenOverExistingPopup,
-			"NoOpenOverItems"		, ImGuiPopupFlags_NoOpenOverItems,
-			"AnyPopupId"			, ImGuiPopupFlags_AnyPopupId,
-			"AnyPopupLevel"			, ImGuiPopupFlags_AnyPopupLevel,
-			"AnyPopup"				, ImGuiPopupFlags_AnyPopup
+			ENUM_HELPER(ImGuiPopupFlags,None),
+			ENUM_HELPER(ImGuiPopupFlags,MouseButtonLeft),
+			ENUM_HELPER(ImGuiPopupFlags,MouseButtonRight),
+			ENUM_HELPER(ImGuiPopupFlags,MouseButtonMiddle),
+			ENUM_HELPER(ImGuiPopupFlags,MouseButtonMask_),
+			ENUM_HELPER(ImGuiPopupFlags,MouseButtonDefault_),
+			ENUM_HELPER(ImGuiPopupFlags,NoReopen),
+			ENUM_HELPER(ImGuiPopupFlags,NoOpenOverExistingPopup),
+			ENUM_HELPER(ImGuiPopupFlags,NoOpenOverItems),
+			ENUM_HELPER(ImGuiPopupFlags,AnyPopupId),
+			ENUM_HELPER(ImGuiPopupFlags,AnyPopupLevel),
+			ENUM_HELPER(ImGuiPopupFlags,AnyPopup)
 		);
 #pragma endregion Popup Flags
 
+#pragma region Selectable Flags
+		lua.new_enum("ImGuiSelectableFlags",
+			ENUM_HELPER(ImGuiSelectableFlags, None),
+			ENUM_HELPER(ImGuiSelectableFlags, NoAutoClosePopups),
+			ENUM_HELPER(ImGuiSelectableFlags, SpanAllColumns),
+			ENUM_HELPER(ImGuiSelectableFlags, AllowDoubleClick),
+			ENUM_HELPER(ImGuiSelectableFlags, Disabled),
+			ENUM_HELPER(ImGuiSelectableFlags, AllowOverlap)
+		);
+#pragma endregion Selectable Flags
+
+#pragma region Combo Flags
+		lua.new_enum("ImGuiComboFlags",
+			ENUM_HELPER(ImGuiComboFlags, None),
+			ENUM_HELPER(ImGuiComboFlags, PopupAlignLeft),
+			ENUM_HELPER(ImGuiComboFlags, HeightSmall),
+			ENUM_HELPER(ImGuiComboFlags, HeightRegular),
+			ENUM_HELPER(ImGuiComboFlags, HeightLarge),
+			ENUM_HELPER(ImGuiComboFlags, HeightLargest),
+			ENUM_HELPER(ImGuiComboFlags, NoArrowButton),
+			ENUM_HELPER(ImGuiComboFlags, NoPreview),
+			ENUM_HELPER(ImGuiComboFlags, WidthFitPreview),
+			ENUM_HELPER(ImGuiComboFlags, HeightMask_)
+		);
+#pragma endregion Combo Flags
+
 #pragma region TabBar Flags
 		lua.new_enum("ImGuiTabBarFlags",
-			"None"							, ImGuiTabBarFlags_None,
-			"Reorderable"					, ImGuiTabBarFlags_Reorderable,
-			"AutoSelectNewTabs"				, ImGuiTabBarFlags_AutoSelectNewTabs,
-			"TabListPopupButton"			, ImGuiTabBarFlags_TabListPopupButton,
-			"NoCloseWithMiddleMouseButton"	, ImGuiTabBarFlags_NoCloseWithMiddleMouseButton,
-			"NoTabListScrollingButtons"		, ImGuiTabBarFlags_NoTabListScrollingButtons,
-			"NoTooltip"						, ImGuiTabBarFlags_NoTooltip,
-			"FittingPolicyResizeDown"		, ImGuiTabBarFlags_FittingPolicyResizeDown,
-			"FittingPolicyScroll"			, ImGuiTabBarFlags_FittingPolicyScroll,
-			"FittingPolicyMask_"			, ImGuiTabBarFlags_FittingPolicyMask_,
-			"FittingPolicyDefault_"			, ImGuiTabBarFlags_FittingPolicyDefault_
+			ENUM_HELPER(ImGuiTabBarFlags, None),
+			ENUM_HELPER(ImGuiTabBarFlags, Reorderable),
+			ENUM_HELPER(ImGuiTabBarFlags, AutoSelectNewTabs),
+			ENUM_HELPER(ImGuiTabBarFlags, TabListPopupButton),
+			ENUM_HELPER(ImGuiTabBarFlags, NoCloseWithMiddleMouseButton),
+			ENUM_HELPER(ImGuiTabBarFlags, NoTabListScrollingButtons),
+			ENUM_HELPER(ImGuiTabBarFlags, NoTooltip),
+			ENUM_HELPER(ImGuiTabBarFlags, DrawSelectedOverline),
+			ENUM_HELPER(ImGuiTabBarFlags, FittingPolicyResizeDown),
+			ENUM_HELPER(ImGuiTabBarFlags, FittingPolicyScroll),
+			ENUM_HELPER(ImGuiTabBarFlags, FittingPolicyMask_),
+			ENUM_HELPER(ImGuiTabBarFlags, FittingPolicyDefault_)
 		);
 #pragma endregion TabBar Flags
 
 #pragma region TabItem Flags
 		lua.new_enum("ImGuiTabItemFlags",
-			"None"							, ImGuiTabItemFlags_None,
-			"UnsavedDocument"				, ImGuiTabItemFlags_UnsavedDocument,
-			"SetSelected"					, ImGuiTabItemFlags_SetSelected,
-			"NoCloseWithMiddleMouseButton"	, ImGuiTabItemFlags_NoCloseWithMiddleMouseButton,
-			"NoPushId"						, ImGuiTabItemFlags_NoPushId,
-			"NoTooltip"						, ImGuiTabItemFlags_NoTooltip
+			ENUM_HELPER(ImGuiTabItemFlags, None),
+			ENUM_HELPER(ImGuiTabItemFlags, UnsavedDocument),
+			ENUM_HELPER(ImGuiTabItemFlags, SetSelected),
+			ENUM_HELPER(ImGuiTabItemFlags, NoCloseWithMiddleMouseButton),
+			ENUM_HELPER(ImGuiTabItemFlags, NoPushId),
+			ENUM_HELPER(ImGuiTabItemFlags, NoTooltip),
+			ENUM_HELPER(ImGuiTabItemFlags, NoReorder),
+			ENUM_HELPER(ImGuiTabItemFlags, Leading),
+			ENUM_HELPER(ImGuiTabItemFlags, Trailing),
+			ENUM_HELPER(ImGuiTabItemFlags, NoAssumedClosure)
 		);
 #pragma endregion TabItem Flags
 
+#pragma region Focused Flags
+		lua.new_enum("ImGuiFocusedFlags",
+			ENUM_HELPER(ImGuiFocusedFlags, None),
+			ENUM_HELPER(ImGuiFocusedFlags, ChildWindows),
+			ENUM_HELPER(ImGuiFocusedFlags, RootWindow),
+			ENUM_HELPER(ImGuiFocusedFlags, AnyWindow),
+			ENUM_HELPER(ImGuiFocusedFlags, NoPopupHierarchy),
+			ENUM_HELPER(ImGuiFocusedFlags, DockHierarchy),
+			ENUM_HELPER(ImGuiFocusedFlags, RootAndChildWindows)
+		);
+#pragma endregion Focused Flags
+
+#pragma region Hovered Flags
+		lua.new_enum("ImGuiHoveredFlags",
+			ENUM_HELPER(ImGuiHoveredFlags, None),
+			ENUM_HELPER(ImGuiHoveredFlags, ChildWindows),
+			ENUM_HELPER(ImGuiHoveredFlags, RootWindow),
+			ENUM_HELPER(ImGuiHoveredFlags, AnyWindow),
+			ENUM_HELPER(ImGuiHoveredFlags, NoPopupHierarchy),
+			ENUM_HELPER(ImGuiHoveredFlags, DockHierarchy),
+			ENUM_HELPER(ImGuiHoveredFlags, AllowWhenBlockedByPopup),
+			ENUM_HELPER(ImGuiHoveredFlags, AllowWhenBlockedByActiveItem),
+			ENUM_HELPER(ImGuiHoveredFlags, AllowWhenOverlappedByItem),
+			ENUM_HELPER(ImGuiHoveredFlags, AllowWhenOverlappedByWindow),
+			ENUM_HELPER(ImGuiHoveredFlags, AllowWhenDisabled),
+			ENUM_HELPER(ImGuiHoveredFlags, NoNavOverride),
+			ENUM_HELPER(ImGuiHoveredFlags, AllowWhenOverlapped),
+			ENUM_HELPER(ImGuiHoveredFlags, RectOnly),
+			ENUM_HELPER(ImGuiHoveredFlags, RootAndChildWindows),
+			ENUM_HELPER(ImGuiHoveredFlags, ForTooltip),
+			ENUM_HELPER(ImGuiHoveredFlags, Stationary),
+			ENUM_HELPER(ImGuiHoveredFlags, DelayNone),
+			ENUM_HELPER(ImGuiHoveredFlags, DelayShort),
+			ENUM_HELPER(ImGuiHoveredFlags, DelayNormal),
+			ENUM_HELPER(ImGuiHoveredFlags, NoSharedDelay)
+		);
+#pragma endregion Hovered Flags
+
 #pragma region DockNode Flags
 		lua.new_enum("ImGuiDockNodeFlags",
-			"None"							, ImGuiDockNodeFlags_None,
-			"KeepAliveOnly"					, ImGuiDockNodeFlags_KeepAliveOnly,
-			"NoDockingInCentralNode"		, ImGuiDockNodeFlags_NoDockingInCentralNode,
-			"PassthruCentralNode"			, ImGuiDockNodeFlags_PassthruCentralNode,
-			"NoSplit"						, ImGuiDockNodeFlags_NoSplit,
-			"NoResize"						, ImGuiDockNodeFlags_NoResize,
-			"AutoHideTabBar"				, ImGuiDockNodeFlags_AutoHideTabBar
+			ENUM_HELPER(ImGuiDockNodeFlags, None),
+			ENUM_HELPER(ImGuiDockNodeFlags, KeepAliveOnly),
+			ENUM_HELPER(ImGuiDockNodeFlags, NoDockingOverCentralNode),
+			ENUM_HELPER(ImGuiDockNodeFlags, PassthruCentralNode),
+			ENUM_HELPER(ImGuiDockNodeFlags, NoDockingSplit),
+			ENUM_HELPER(ImGuiDockNodeFlags, NoResize),
+			ENUM_HELPER(ImGuiDockNodeFlags, AutoHideTabBar),
+			ENUM_HELPER(ImGuiDockNodeFlags, NoUndocking)
 		);
 #pragma endregion DockNode Flags
 
-#pragma region MouseButton
-		lua.new_enum("ImGuiMouseButton",
-			"ImGuiMouseButton_Left"			, ImGuiMouseButton_Left,
-			"ImGuiMouseButton_Right"		, ImGuiMouseButton_Right,
-			"ImGuiMouseButton_Middle"		, ImGuiMouseButton_Middle,
-			"ImGuiMouseButton_COUNT"		, ImGuiMouseButton_COUNT
+#pragma region DragDrop Flags
+		lua.new_enum("ImGuiDragDropFlags",
+			ENUM_HELPER(ImGuiDragDropFlags, None),
+			ENUM_HELPER(ImGuiDragDropFlags, SourceNoPreviewTooltip),
+			ENUM_HELPER(ImGuiDragDropFlags, SourceNoDisableHover),
+			ENUM_HELPER(ImGuiDragDropFlags, SourceNoHoldToOpenOthers),
+			ENUM_HELPER(ImGuiDragDropFlags, SourceAllowNullID),
+			ENUM_HELPER(ImGuiDragDropFlags, SourceExtern),
+			ENUM_HELPER(ImGuiDragDropFlags, PayloadAutoExpire),
+			ENUM_HELPER(ImGuiDragDropFlags, PayloadNoCrossContext),
+			ENUM_HELPER(ImGuiDragDropFlags, PayloadNoCrossProcess),
+			ENUM_HELPER(ImGuiDragDropFlags, AcceptBeforeDelivery),
+			ENUM_HELPER(ImGuiDragDropFlags, AcceptNoDrawDefaultRect),
+			ENUM_HELPER(ImGuiDragDropFlags, AcceptNoPreviewTooltip),
+			ENUM_HELPER(ImGuiDragDropFlags, AcceptPeekOnly)
 		);
-#pragma endregion MouseButton
+#pragma endregion DragDrop Flags
+
+#pragma region Datatype
+		lua.new_enum("ImGuiDataType",
+			ENUM_HELPER(ImGuiDataType, S8),
+			ENUM_HELPER(ImGuiDataType, U8),
+			ENUM_HELPER(ImGuiDataType, S16),
+			ENUM_HELPER(ImGuiDataType, U16),
+			ENUM_HELPER(ImGuiDataType, S32),
+			ENUM_HELPER(ImGuiDataType, U32),
+			ENUM_HELPER(ImGuiDataType, S64),
+			ENUM_HELPER(ImGuiDataType, U64),
+			ENUM_HELPER(ImGuiDataType, Float),
+			ENUM_HELPER(ImGuiDataType, Double),
+			ENUM_HELPER(ImGuiDataType, Bool),
+			ENUM_HELPER(ImGuiDataType, COUNT)
+		);
+#pragma endregion Datatype
+
+#pragma region Dir
+		lua.new_enum("ImGuiDir",
+			ENUM_HELPER(ImGuiDir,None),
+			ENUM_HELPER(ImGuiDir,Left),
+			ENUM_HELPER(ImGuiDir,Right),
+			ENUM_HELPER(ImGuiDir,Up),
+			ENUM_HELPER(ImGuiDir,Down),
+			ENUM_HELPER(ImGuiDir,COUNT)
+		);
+#pragma endregion Dir
+
+#pragma region Sort Dir
+		lua.new_enum("ImGuiSortDirection",
+			ENUM_HELPER(ImGuiSortDirection, None),
+			ENUM_HELPER(ImGuiSortDirection, Ascending),
+			ENUM_HELPER(ImGuiSortDirection, Descending)
+		);
+#pragma endregion Sort Dir
 
 #pragma region Key
 		lua.new_enum("ImGuiKey",
-			"Tab"							, ImGuiKey_Tab,
-			"LeftArrow"						, ImGuiKey_LeftArrow,
-			"RightArrow"					, ImGuiKey_RightArrow,
-			"UpArrow"						, ImGuiKey_UpArrow,
-			"DownArrow"						, ImGuiKey_DownArrow,
-			"PageUp"						, ImGuiKey_PageUp,
-			"PageDown"						, ImGuiKey_PageDown,
-			"Home"							, ImGuiKey_Home,
-			"End"							, ImGuiKey_End,
-			"Insert"						, ImGuiKey_Insert,
-			"Delete"						, ImGuiKey_Delete,
-			"Backspace"						, ImGuiKey_Backspace,
-			"Space"							, ImGuiKey_Space,
-			"Enter"							, ImGuiKey_Enter,
-			"Escape"						, ImGuiKey_Escape,
-			"KeyPadEnter"					, ImGuiKey_KeyPadEnter,
-			"A"								, ImGuiKey_A,
-			"C"								, ImGuiKey_C,
-			"V"								, ImGuiKey_V,
-			"X"								, ImGuiKey_X,
-			"Y"								, ImGuiKey_Y,
-			"Z"								, ImGuiKey_Z,
-			"COUNT"							, ImGuiKey_COUNT
+			ENUM_HELPER(ImGuiKey, Tab),
+			ENUM_HELPER(ImGuiKey, LeftArrow),
+			ENUM_HELPER(ImGuiKey, RightArrow),
+			ENUM_HELPER(ImGuiKey, UpArrow),
+			ENUM_HELPER(ImGuiKey, DownArrow),
+			ENUM_HELPER(ImGuiKey, PageUp),
+			ENUM_HELPER(ImGuiKey, PageDown),
+			ENUM_HELPER(ImGuiKey, Home),
+			ENUM_HELPER(ImGuiKey, End),
+			ENUM_HELPER(ImGuiKey, Insert),
+			ENUM_HELPER(ImGuiKey, Delete),
+			ENUM_HELPER(ImGuiKey, Backspace),
+			ENUM_HELPER(ImGuiKey, Space),
+			ENUM_HELPER(ImGuiKey, Enter),
+			ENUM_HELPER(ImGuiKey, Escape),
+			ENUM_HELPER(ImGuiKey, LeftCtrl),
+			ENUM_HELPER(ImGuiKey, LeftShift),
+			ENUM_HELPER(ImGuiKey, LeftAlt),
+			ENUM_HELPER(ImGuiKey, LeftSuper),
+			ENUM_HELPER(ImGuiKey, RightCtrl),
+			ENUM_HELPER(ImGuiKey, RightShift),
+			ENUM_HELPER(ImGuiKey, RightAlt),
+			ENUM_HELPER(ImGuiKey, RightSuper),
+			ENUM_HELPER(ImGuiKey, Menu),
+			ENUM_HELPER(ImGuiKey, 0),
+			ENUM_HELPER(ImGuiKey, 1),
+			ENUM_HELPER(ImGuiKey, 2),
+			ENUM_HELPER(ImGuiKey, 3),
+			ENUM_HELPER(ImGuiKey, 4),
+			ENUM_HELPER(ImGuiKey, 5),
+			ENUM_HELPER(ImGuiKey, 6),
+			ENUM_HELPER(ImGuiKey, 7),
+			ENUM_HELPER(ImGuiKey, 8),
+			ENUM_HELPER(ImGuiKey, 9),
+			ENUM_HELPER(ImGuiKey, A),
+			ENUM_HELPER(ImGuiKey, B),
+			ENUM_HELPER(ImGuiKey, C),
+			ENUM_HELPER(ImGuiKey, D),
+			ENUM_HELPER(ImGuiKey, E),
+			ENUM_HELPER(ImGuiKey, F),
+			ENUM_HELPER(ImGuiKey, G),
+			ENUM_HELPER(ImGuiKey, H),
+			ENUM_HELPER(ImGuiKey, I),
+			ENUM_HELPER(ImGuiKey, J),
+			ENUM_HELPER(ImGuiKey, K),
+			ENUM_HELPER(ImGuiKey, L),
+			ENUM_HELPER(ImGuiKey, M),
+			ENUM_HELPER(ImGuiKey, N),
+			ENUM_HELPER(ImGuiKey, O),
+			ENUM_HELPER(ImGuiKey, P),
+			ENUM_HELPER(ImGuiKey, Q),
+			ENUM_HELPER(ImGuiKey, R),
+			ENUM_HELPER(ImGuiKey, S),
+			ENUM_HELPER(ImGuiKey, T),
+			ENUM_HELPER(ImGuiKey, U),
+			ENUM_HELPER(ImGuiKey, V),
+			ENUM_HELPER(ImGuiKey, W),
+			ENUM_HELPER(ImGuiKey, X),
+			ENUM_HELPER(ImGuiKey, Y),
+			ENUM_HELPER(ImGuiKey, Z),
+			ENUM_HELPER(ImGuiKey, F1),
+			ENUM_HELPER(ImGuiKey, F2),
+			ENUM_HELPER(ImGuiKey, F3),
+			ENUM_HELPER(ImGuiKey, F4),
+			ENUM_HELPER(ImGuiKey, F5),
+			ENUM_HELPER(ImGuiKey, F6),
+			ENUM_HELPER(ImGuiKey, F7),
+			ENUM_HELPER(ImGuiKey, F8),
+			ENUM_HELPER(ImGuiKey, F9),
+			ENUM_HELPER(ImGuiKey, F10),
+			ENUM_HELPER(ImGuiKey, F11),
+			ENUM_HELPER(ImGuiKey, F12),
+			ENUM_HELPER(ImGuiKey, F13),
+			ENUM_HELPER(ImGuiKey, F14),
+			ENUM_HELPER(ImGuiKey, F15),
+			ENUM_HELPER(ImGuiKey, F16),
+			ENUM_HELPER(ImGuiKey, F17),
+			ENUM_HELPER(ImGuiKey, F18),
+			ENUM_HELPER(ImGuiKey, F19),
+			ENUM_HELPER(ImGuiKey, F20),
+			ENUM_HELPER(ImGuiKey, F21),
+			ENUM_HELPER(ImGuiKey, F22),
+			ENUM_HELPER(ImGuiKey, F23),
+			ENUM_HELPER(ImGuiKey, F24),
+			ENUM_HELPER(ImGuiKey, Apostrophe),
+			ENUM_HELPER(ImGuiKey, Comma),
+			ENUM_HELPER(ImGuiKey, Minus),
+			ENUM_HELPER(ImGuiKey, Period),
+			ENUM_HELPER(ImGuiKey, Slash),
+			ENUM_HELPER(ImGuiKey, Semicolon),
+			ENUM_HELPER(ImGuiKey, Equal),
+			ENUM_HELPER(ImGuiKey, LeftBracket),
+			ENUM_HELPER(ImGuiKey, Backslash),
+			ENUM_HELPER(ImGuiKey, RightBracket),
+			ENUM_HELPER(ImGuiKey, GraveAccent),
+			ENUM_HELPER(ImGuiKey, CapsLock),
+			ENUM_HELPER(ImGuiKey, ScrollLock),
+			ENUM_HELPER(ImGuiKey, NumLock),
+			ENUM_HELPER(ImGuiKey, PrintScreen),
+			ENUM_HELPER(ImGuiKey, Pause),
+			ENUM_HELPER(ImGuiKey, Keypad0),
+			ENUM_HELPER(ImGuiKey, Keypad1),
+			ENUM_HELPER(ImGuiKey, Keypad2),
+			ENUM_HELPER(ImGuiKey, Keypad3),
+			ENUM_HELPER(ImGuiKey, Keypad4),
+			ENUM_HELPER(ImGuiKey, Keypad5),
+			ENUM_HELPER(ImGuiKey, Keypad6),
+			ENUM_HELPER(ImGuiKey, Keypad7),
+			ENUM_HELPER(ImGuiKey, Keypad8),
+			ENUM_HELPER(ImGuiKey, Keypad9),
+			ENUM_HELPER(ImGuiKey, KeypadDecimal),
+			ENUM_HELPER(ImGuiKey, KeypadDivide),
+			ENUM_HELPER(ImGuiKey, KeypadMultiply),
+			ENUM_HELPER(ImGuiKey, KeypadSubtract),
+			ENUM_HELPER(ImGuiKey, KeypadAdd),
+			ENUM_HELPER(ImGuiKey, KeypadEnter),
+			ENUM_HELPER(ImGuiKey, KeypadEqual),
+			ENUM_HELPER(ImGuiKey, AppBack),
+			ENUM_HELPER(ImGuiKey, AppForward),
+			ENUM_HELPER(ImGuiKey, GamepadStart),
+			ENUM_HELPER(ImGuiKey, GamepadBack),
+			ENUM_HELPER(ImGuiKey, GamepadFaceLeft),
+			ENUM_HELPER(ImGuiKey, GamepadFaceRight),
+			ENUM_HELPER(ImGuiKey, GamepadFaceUp),
+			ENUM_HELPER(ImGuiKey, GamepadFaceDown),
+			ENUM_HELPER(ImGuiKey, GamepadDpadLeft),
+			ENUM_HELPER(ImGuiKey, GamepadDpadRight),
+			ENUM_HELPER(ImGuiKey, GamepadDpadUp),
+			ENUM_HELPER(ImGuiKey, GamepadDpadDown),
+			ENUM_HELPER(ImGuiKey, GamepadL1),
+			ENUM_HELPER(ImGuiKey, GamepadR1),
+			ENUM_HELPER(ImGuiKey, GamepadL2),
+			ENUM_HELPER(ImGuiKey, GamepadR2),
+			ENUM_HELPER(ImGuiKey, GamepadL3),
+			ENUM_HELPER(ImGuiKey, GamepadR3),
+			ENUM_HELPER(ImGuiKey, GamepadLStickLeft),
+			ENUM_HELPER(ImGuiKey, GamepadLStickRight),
+			ENUM_HELPER(ImGuiKey, GamepadLStickUp),
+			ENUM_HELPER(ImGuiKey, GamepadLStickDown),
+			ENUM_HELPER(ImGuiKey, GamepadRStickLeft),
+			ENUM_HELPER(ImGuiKey, GamepadRStickRight),
+			ENUM_HELPER(ImGuiKey, GamepadRStickUp),
+			ENUM_HELPER(ImGuiKey, GamepadRStickDown),
+			ENUM_HELPER(ImGuiKey, MouseLeft),
+			ENUM_HELPER(ImGuiKey, MouseRight),
+			ENUM_HELPER(ImGuiKey, MouseMiddle),
+			ENUM_HELPER(ImGuiKey, MouseX1),
+			ENUM_HELPER(ImGuiKey, MouseX2),
+			ENUM_HELPER(ImGuiKey, MouseWheelX),
+			ENUM_HELPER(ImGuiKey, MouseWheelY),
+			ENUM_HELPER(ImGuiKey, ReservedForModCtrl),
+			ENUM_HELPER(ImGuiKey, ReservedForModShift),
+			ENUM_HELPER(ImGuiKey, ReservedForModAlt),
+			ENUM_HELPER(ImGuiKey, ReservedForModSuper),
+			ENUM_HELPER(ImGuiKey, COUNT),
+			ENUM_HELPER(ImGuiMod, None),
+			ENUM_HELPER(ImGuiMod, Ctrl),
+			ENUM_HELPER(ImGuiMod, Shift),
+			ENUM_HELPER(ImGuiMod, Alt),
+			ENUM_HELPER(ImGuiMod, Super),
+			ENUM_HELPER(ImGuiMod, Mask_),
+			ENUM_HELPER(ImGuiKey, NamedKey_BEGIN),
+			ENUM_HELPER(ImGuiKey, NamedKey_END),
+			ENUM_HELPER(ImGuiKey, NamedKey_COUNT),
+#ifdef IMGUI_DISABLE_OBSOLETE_KEYIO
+			ENUM_HELPER(ImGuiKey, NamedKey_COUNT),
+			ENUM_HELPER(ImGuiKey, NamedKey_BEGIN)
+#else
+			ENUM_HELPER(ImGuiKey, KeysData_SIZE),
+			ENUM_HELPER(ImGuiKey, KeysData_OFFSET)
+#endif
 		);
 #pragma endregion Key
 
+#pragma region Input Flags
+		lua.new_enum("ImGuiInputFlags",
+			ENUM_HELPER(ImGuiInputFlags, None),
+			ENUM_HELPER(ImGuiInputFlags, Repeat),
+			ENUM_HELPER(ImGuiInputFlags, RouteActive),
+			ENUM_HELPER(ImGuiInputFlags, RouteFocused),
+			ENUM_HELPER(ImGuiInputFlags, RouteGlobal),
+			ENUM_HELPER(ImGuiInputFlags, RouteAlways),
+			ENUM_HELPER(ImGuiInputFlags, RouteOverFocused),
+			ENUM_HELPER(ImGuiInputFlags, RouteOverActive),
+			ENUM_HELPER(ImGuiInputFlags, RouteUnlessBgFocused),
+			ENUM_HELPER(ImGuiInputFlags, RouteFromRootWindow),
+			ENUM_HELPER(ImGuiInputFlags, Tooltip)
+		);
+#pragma endregion Input Flags
+
+#pragma region Config Flags
+		lua.new_enum("ImGuiConfigFlags",
+			ENUM_HELPER(ImGuiConfigFlags, None),
+			ENUM_HELPER(ImGuiConfigFlags, NavEnableKeyboard),
+			ENUM_HELPER(ImGuiConfigFlags, NavEnableGamepad),
+			ENUM_HELPER(ImGuiConfigFlags, NavEnableSetMousePos),
+			ENUM_HELPER(ImGuiConfigFlags, NavNoCaptureKeyboard),
+			ENUM_HELPER(ImGuiConfigFlags, NoMouse),
+			ENUM_HELPER(ImGuiConfigFlags, NoMouseCursorChange),
+			ENUM_HELPER(ImGuiConfigFlags, NoKeyboard),
+			ENUM_HELPER(ImGuiConfigFlags, DockingEnable),
+			ENUM_HELPER(ImGuiConfigFlags, ViewportsEnable),
+			ENUM_HELPER(ImGuiConfigFlags, DpiEnableScaleViewports),
+			ENUM_HELPER(ImGuiConfigFlags, DpiEnableScaleFonts),
+			ENUM_HELPER(ImGuiConfigFlags, IsSRGB),
+			ENUM_HELPER(ImGuiConfigFlags, IsTouchScreen)
+		);
+#pragma endregion Config Flags
+
+#pragma region Backend Flags
+		lua.new_enum("ImGuiBackendFlags",
+			ENUM_HELPER(ImGuiBackendFlags, None),
+			ENUM_HELPER(ImGuiBackendFlags, HasGamepad),
+			ENUM_HELPER(ImGuiBackendFlags, HasMouseCursors),
+			ENUM_HELPER(ImGuiBackendFlags, HasSetMousePos),
+			ENUM_HELPER(ImGuiBackendFlags, RendererHasVtxOffset),
+			ENUM_HELPER(ImGuiBackendFlags, PlatformHasViewports),
+			ENUM_HELPER(ImGuiBackendFlags, HasMouseHoveredViewport),
+			ENUM_HELPER(ImGuiBackendFlags, RendererHasViewports)
+		);
+#pragma endregion Backend Flags
+
+#pragma region Col
+		lua.new_enum("ImGuiCol",
+			ENUM_HELPER(ImGuiCol, Text),
+			ENUM_HELPER(ImGuiCol, TextDisabled),
+			ENUM_HELPER(ImGuiCol, WindowBg),
+			ENUM_HELPER(ImGuiCol, ChildBg),
+			ENUM_HELPER(ImGuiCol, PopupBg),
+			ENUM_HELPER(ImGuiCol, Border),
+			ENUM_HELPER(ImGuiCol, BorderShadow),
+			ENUM_HELPER(ImGuiCol, FrameBg),
+			ENUM_HELPER(ImGuiCol, FrameBgHovered),
+			ENUM_HELPER(ImGuiCol, FrameBgActive),
+			ENUM_HELPER(ImGuiCol, TitleBg),
+			ENUM_HELPER(ImGuiCol, TitleBgActive),
+			ENUM_HELPER(ImGuiCol, TitleBgCollapsed),
+			ENUM_HELPER(ImGuiCol, MenuBarBg),
+			ENUM_HELPER(ImGuiCol, ScrollbarBg),
+			ENUM_HELPER(ImGuiCol, ScrollbarGrab),
+			ENUM_HELPER(ImGuiCol, ScrollbarGrabHovered),
+			ENUM_HELPER(ImGuiCol, ScrollbarGrabActive),
+			ENUM_HELPER(ImGuiCol, CheckMark),
+			ENUM_HELPER(ImGuiCol, SliderGrab),
+			ENUM_HELPER(ImGuiCol, SliderGrabActive),
+			ENUM_HELPER(ImGuiCol, Button),
+			ENUM_HELPER(ImGuiCol, ButtonHovered),
+			ENUM_HELPER(ImGuiCol, ButtonActive),
+			ENUM_HELPER(ImGuiCol, Header),
+			ENUM_HELPER(ImGuiCol, HeaderHovered),
+			ENUM_HELPER(ImGuiCol, HeaderActive),
+			ENUM_HELPER(ImGuiCol, Separator),
+			ENUM_HELPER(ImGuiCol, SeparatorHovered),
+			ENUM_HELPER(ImGuiCol, SeparatorActive),
+			ENUM_HELPER(ImGuiCol, ResizeGrip),
+			ENUM_HELPER(ImGuiCol, ResizeGripHovered),
+			ENUM_HELPER(ImGuiCol, ResizeGripActive),
+			ENUM_HELPER(ImGuiCol, TabHovered),
+			ENUM_HELPER(ImGuiCol, Tab),
+			ENUM_HELPER(ImGuiCol, TabSelected),
+			ENUM_HELPER(ImGuiCol, TabSelectedOverline),
+			ENUM_HELPER(ImGuiCol, TabDimmed),
+			ENUM_HELPER(ImGuiCol, TabDimmedSelected),
+			ENUM_HELPER(ImGuiCol, TabDimmedSelectedOverline),
+			ENUM_HELPER(ImGuiCol, DockingPreview),
+			ENUM_HELPER(ImGuiCol, DockingEmptyBg),
+			ENUM_HELPER(ImGuiCol, PlotLines),
+			ENUM_HELPER(ImGuiCol, PlotLinesHovered),
+			ENUM_HELPER(ImGuiCol, PlotHistogram),
+			ENUM_HELPER(ImGuiCol, PlotHistogramHovered),
+			ENUM_HELPER(ImGuiCol, TableHeaderBg),
+			ENUM_HELPER(ImGuiCol, TableBorderStrong),
+			ENUM_HELPER(ImGuiCol, TableBorderLight),
+			ENUM_HELPER(ImGuiCol, TableRowBg),
+			ENUM_HELPER(ImGuiCol, TableRowBgAlt),
+			ENUM_HELPER(ImGuiCol, TextLink),
+			ENUM_HELPER(ImGuiCol, TextSelectedBg),
+			ENUM_HELPER(ImGuiCol, DragDropTarget),
+			ENUM_HELPER(ImGuiCol, NavHighlight),
+			ENUM_HELPER(ImGuiCol, NavWindowingHighlight),
+			ENUM_HELPER(ImGuiCol, NavWindowingDimBg),
+			ENUM_HELPER(ImGuiCol, ModalWindowDimBg),
+			ENUM_HELPER(ImGuiCol, COUNT)
+		);
+#pragma endregion Col
+
+#pragma region Style
+		lua.new_enum("ImGuiStyleVar",
+			ENUM_HELPER(ImGuiStyleVar, Alpha),
+			ENUM_HELPER(ImGuiStyleVar, DisabledAlpha),
+			ENUM_HELPER(ImGuiStyleVar, WindowPadding),
+			ENUM_HELPER(ImGuiStyleVar, WindowRounding),
+			ENUM_HELPER(ImGuiStyleVar, WindowBorderSize),
+			ENUM_HELPER(ImGuiStyleVar, WindowMinSize),
+			ENUM_HELPER(ImGuiStyleVar, WindowTitleAlign),
+			ENUM_HELPER(ImGuiStyleVar, ChildRounding),
+			ENUM_HELPER(ImGuiStyleVar, ChildBorderSize),
+			ENUM_HELPER(ImGuiStyleVar, PopupRounding),
+			ENUM_HELPER(ImGuiStyleVar, PopupBorderSize),
+			ENUM_HELPER(ImGuiStyleVar, FramePadding),
+			ENUM_HELPER(ImGuiStyleVar, FrameRounding),
+			ENUM_HELPER(ImGuiStyleVar, FrameBorderSize),
+			ENUM_HELPER(ImGuiStyleVar, ItemSpacing),
+			ENUM_HELPER(ImGuiStyleVar, ItemInnerSpacing),
+			ENUM_HELPER(ImGuiStyleVar, IndentSpacing),
+			ENUM_HELPER(ImGuiStyleVar, CellPadding),
+			ENUM_HELPER(ImGuiStyleVar, ScrollbarSize),
+			ENUM_HELPER(ImGuiStyleVar, ScrollbarRounding),
+			ENUM_HELPER(ImGuiStyleVar, GrabMinSize),
+			ENUM_HELPER(ImGuiStyleVar, GrabRounding),
+			ENUM_HELPER(ImGuiStyleVar, TabRounding),
+			ENUM_HELPER(ImGuiStyleVar, TabBorderSize),
+			ENUM_HELPER(ImGuiStyleVar, TabBarBorderSize),
+			ENUM_HELPER(ImGuiStyleVar, TabBarOverlineSize),
+			ENUM_HELPER(ImGuiStyleVar, TableAngledHeadersAngle),
+			ENUM_HELPER(ImGuiStyleVar, TableAngledHeadersTextAlign),
+			ENUM_HELPER(ImGuiStyleVar, ButtonTextAlign),
+			ENUM_HELPER(ImGuiStyleVar, SelectableTextAlign),
+			ENUM_HELPER(ImGuiStyleVar, SeparatorTextBorderSize),
+			ENUM_HELPER(ImGuiStyleVar, SeparatorTextAlign),
+			ENUM_HELPER(ImGuiStyleVar, SeparatorTextPadding),
+			ENUM_HELPER(ImGuiStyleVar, DockingSeparatorSize),
+			ENUM_HELPER(ImGuiStyleVar, COUNT)
+		);
+#pragma endregion Style
+
+#pragma region Button Flags
+		lua.new_enum("ImGuiButtonFlags",
+			ENUM_HELPER(ImGuiButtonFlags, None),
+			ENUM_HELPER(ImGuiButtonFlags, MouseButtonLeft),
+			ENUM_HELPER(ImGuiButtonFlags, MouseButtonRight),
+			ENUM_HELPER(ImGuiButtonFlags, MouseButtonMiddle),
+			ENUM_HELPER(ImGuiButtonFlags, MouseButtonMask_)
+		);
+#pragma endregion Button Flags
+
+#pragma region ColorEdit Flags
+		lua.new_enum("ImGuiColorEditFlags",
+			ENUM_HELPER(ImGuiColorEditFlags, None),
+			ENUM_HELPER(ImGuiColorEditFlags, NoAlpha),
+			ENUM_HELPER(ImGuiColorEditFlags, NoPicker),
+			ENUM_HELPER(ImGuiColorEditFlags, NoOptions),
+			ENUM_HELPER(ImGuiColorEditFlags, NoSmallPreview),
+			ENUM_HELPER(ImGuiColorEditFlags, NoInputs),
+			ENUM_HELPER(ImGuiColorEditFlags, NoTooltip),
+			ENUM_HELPER(ImGuiColorEditFlags, NoLabel),
+			ENUM_HELPER(ImGuiColorEditFlags, NoSidePreview),
+			ENUM_HELPER(ImGuiColorEditFlags, NoDragDrop),
+			ENUM_HELPER(ImGuiColorEditFlags, NoBorder),
+			ENUM_HELPER(ImGuiColorEditFlags, AlphaBar),
+			ENUM_HELPER(ImGuiColorEditFlags, AlphaPreview),
+			ENUM_HELPER(ImGuiColorEditFlags, AlphaPreviewHalf),
+			ENUM_HELPER(ImGuiColorEditFlags, HDR),
+			ENUM_HELPER(ImGuiColorEditFlags, DisplayRGB),
+			ENUM_HELPER(ImGuiColorEditFlags, DisplayHSV),
+			ENUM_HELPER(ImGuiColorEditFlags, DisplayHex),
+			ENUM_HELPER(ImGuiColorEditFlags, Uint8),
+			ENUM_HELPER(ImGuiColorEditFlags, Float),
+			ENUM_HELPER(ImGuiColorEditFlags, PickerHueBar),
+			ENUM_HELPER(ImGuiColorEditFlags, PickerHueWheel),
+			ENUM_HELPER(ImGuiColorEditFlags, InputRGB),
+			ENUM_HELPER(ImGuiColorEditFlags, InputHSV),
+			ENUM_HELPER(ImGuiColorEditFlags, DefaultOptions_),
+			ENUM_HELPER(ImGuiColorEditFlags, DisplayMask_),
+			ENUM_HELPER(ImGuiColorEditFlags, DataTypeMask_),
+			ENUM_HELPER(ImGuiColorEditFlags, PickerMask_),
+			ENUM_HELPER(ImGuiColorEditFlags, InputMask_)
+		);
+#pragma endregion ColorEdit Flags
+
+#pragma region Slider Flags
+		lua.new_enum("ImGuiSliderFlags",
+			ENUM_HELPER(ImGuiSliderFlags, None),
+			ENUM_HELPER(ImGuiSliderFlags, AlwaysClamp),
+			ENUM_HELPER(ImGuiSliderFlags, Logarithmic),
+			ENUM_HELPER(ImGuiSliderFlags, NoRoundToFormat),
+			ENUM_HELPER(ImGuiSliderFlags, NoInput),
+			ENUM_HELPER(ImGuiSliderFlags, WrapAround),
+			ENUM_HELPER(ImGuiSliderFlags, InvalidMask_)
+		);
+#pragma endregion Slider Flags
+
+#pragma region MouseButton
+		lua.new_enum("ImGuiMouseButton",
+			ENUM_HELPER(ImGuiMouseButton, Left),
+			ENUM_HELPER(ImGuiMouseButton, Right),
+			ENUM_HELPER(ImGuiMouseButton, Middle),
+			ENUM_HELPER(ImGuiMouseButton, COUNT)
+		);
+#pragma endregion MouseButton
+
 #pragma region MouseCursor
 		lua.new_enum("ImGuiMouseCursor",
-			"None"							, ImGuiMouseCursor_None,
-			"Arrow"							, ImGuiMouseCursor_Arrow,
-			"TextInput"						, ImGuiMouseCursor_TextInput,
-			"ResizeAll"						, ImGuiMouseCursor_ResizeAll,
-			"ResizeNS"						, ImGuiMouseCursor_ResizeNS,
-			"ResizeEW"						, ImGuiMouseCursor_ResizeEW,
-			"ResizeNESW"					, ImGuiMouseCursor_ResizeNESW,
-			"ResizeNWSE"					, ImGuiMouseCursor_ResizeNWSE,
-			"Hand"							, ImGuiMouseCursor_Hand,
-			"NotAllowed"					, ImGuiMouseCursor_NotAllowed,
-			"COUNT"							, ImGuiMouseCursor_COUNT
+			ENUM_HELPER(ImGuiMouseCursor, None),
+			ENUM_HELPER(ImGuiMouseCursor, Arrow),
+			ENUM_HELPER(ImGuiMouseCursor, TextInput),
+			ENUM_HELPER(ImGuiMouseCursor, ResizeAll),
+			ENUM_HELPER(ImGuiMouseCursor, ResizeNS),
+			ENUM_HELPER(ImGuiMouseCursor, ResizeEW),
+			ENUM_HELPER(ImGuiMouseCursor, ResizeNESW),
+			ENUM_HELPER(ImGuiMouseCursor, ResizeNWSE),
+			ENUM_HELPER(ImGuiMouseCursor, Hand),
+			ENUM_HELPER(ImGuiMouseCursor, NotAllowed),
+			ENUM_HELPER(ImGuiMouseCursor, COUNT)
 		);
 #pragma endregion MouseCursor
+
+#pragma region Mouse Source
+			lua.new_enum("ImGuiMouseSource",
+				ENUM_HELPER(ImGuiMouseSource, Mouse),
+				ENUM_HELPER(ImGuiMouseSource, TouchScreen),
+				ENUM_HELPER(ImGuiMouseSource, Pen),
+				ENUM_HELPER(ImGuiMouseSource, COUNT)
+			);
+#pragma endregion Sort Dir
+
+#pragma region Cond
+		lua.new_enum("ImGuiCond",
+			ENUM_HELPER(ImGuiCond, None),
+			ENUM_HELPER(ImGuiCond, Always),
+			ENUM_HELPER(ImGuiCond, Once),
+			ENUM_HELPER(ImGuiCond, FirstUseEver),
+			ENUM_HELPER(ImGuiCond, Appearing)
+		);
+#pragma endregion Cond
+
 	}
 	
 	inline void Init(sol::state& lua)
@@ -2066,8 +2483,8 @@ namespace sol_ImGui
 																sol::resolve<bool(const std::string&)>(BeginChild), 
 																sol::resolve<bool(const std::string&, float)>(BeginChild), 
 																sol::resolve<bool(const std::string&, float, float)>(BeginChild),
-																sol::resolve<bool(const std::string&, float, float, bool)>(BeginChild), 
-																sol::resolve<bool(const std::string&, float, float, bool, int)>(BeginChild)
+																sol::resolve<bool(const std::string&, float, float, int)>(BeginChild), 
+																sol::resolve<bool(const std::string&, float, float, int, int)>(BeginChild)
 															));
 		ImGui.set_function("EndChild"						, EndChild);
 #pragma endregion Child Windows
@@ -2203,10 +2620,10 @@ namespace sol_ImGui
 																	sol::resolve<void(float)>(PushTextWrapPos)
 															));
 		ImGui.set_function("PopTextWrapPos"					, PopTextWrapPos);
-		ImGui.set_function("PushAllowKeyboardFocus"			, PushAllowKeyboardFocus);
-		ImGui.set_function("PopAllowKeyboardFocus"			, PopAllowKeyboardFocus);
-		ImGui.set_function("PushButtonRepeat"				, PushButtonRepeat);
-		ImGui.set_function("PopButtonRepeat"				, PopButtonRepeat);
+		//ImGui.set_function("PushAllowKeyboardFocus"			, PushAllowKeyboardFocus);
+		//ImGui.set_function("PopAllowKeyboardFocus"			, PopAllowKeyboardFocus);
+		//ImGui.set_function("PushButtonRepeat"				, PushButtonRepeat);
+		//ImGui.set_function("PopButtonRepeat"				, PopButtonRepeat);
 #pragma endregion Parameters stacks (current window)
 		
 #pragma region Cursor / Layout
@@ -2312,7 +2729,7 @@ namespace sol_ImGui
 																sol::resolve<std::tuple<float, bool>(const std::string&, float, float, float)>(DragFloat),
 																sol::resolve<std::tuple<float, bool>(const std::string&, float, float, float, float)>(DragFloat),
 																sol::resolve<std::tuple<float, bool>(const std::string&, float, float, float, float, const std::string&)>(DragFloat),
-																sol::resolve<std::tuple<float, bool>(const std::string&, float, float, float, float, const std::string&, float)>(DragFloat)
+																sol::resolve<std::tuple<float, bool>(const std::string&, float, float, float, float, const std::string&, int)>(DragFloat)
 															));
 		ImGui.set_function("DragFloat2"						, sol::overload(
 																sol::resolve<std::tuple<sol::as_table_t<std::vector<float>>, bool>(const std::string&, const sol::table&)>(DragFloat2),
@@ -2320,7 +2737,7 @@ namespace sol_ImGui
 																sol::resolve<std::tuple<sol::as_table_t<std::vector<float>>, bool>(const std::string&, const sol::table&, float, float)>(DragFloat2),
 																sol::resolve<std::tuple<sol::as_table_t<std::vector<float>>, bool>(const std::string&, const sol::table&, float, float, float)>(DragFloat2),
 																sol::resolve<std::tuple<sol::as_table_t<std::vector<float>>, bool>(const std::string&, const sol::table&, float, float, float, const std::string&)>(DragFloat2),
-																sol::resolve<std::tuple<sol::as_table_t<std::vector<float>>, bool>(const std::string&, const sol::table&, float, float, float, const std::string&, float)>(DragFloat2)
+																sol::resolve<std::tuple<sol::as_table_t<std::vector<float>>, bool>(const std::string&, const sol::table&, float, float, float, const std::string&, int)>(DragFloat2)
 															));
 		ImGui.set_function("DragFloat3"						, sol::overload(
 																sol::resolve<std::tuple<sol::as_table_t<std::vector<float>>, bool>(const std::string&, const sol::table&)>(DragFloat3),
@@ -2328,7 +2745,7 @@ namespace sol_ImGui
 																sol::resolve<std::tuple<sol::as_table_t<std::vector<float>>, bool>(const std::string&, const sol::table&, float, float)>(DragFloat3),
 																sol::resolve<std::tuple<sol::as_table_t<std::vector<float>>, bool>(const std::string&, const sol::table&, float, float, float)>(DragFloat3),
 																sol::resolve<std::tuple<sol::as_table_t<std::vector<float>>, bool>(const std::string&, const sol::table&, float, float, float, const std::string&)>(DragFloat3),
-																sol::resolve<std::tuple<sol::as_table_t<std::vector<float>>, bool>(const std::string&, const sol::table&, float, float, float, const std::string&, float)>(DragFloat3)
+																sol::resolve<std::tuple<sol::as_table_t<std::vector<float>>, bool>(const std::string&, const sol::table&, float, float, float, const std::string&, int)>(DragFloat3)
 															));
 		ImGui.set_function("DragFloat4"						, sol::overload(
 																sol::resolve<std::tuple<sol::as_table_t<std::vector<float>>, bool>(const std::string&, const sol::table&)>(DragFloat4),
@@ -2336,35 +2753,39 @@ namespace sol_ImGui
 																sol::resolve<std::tuple<sol::as_table_t<std::vector<float>>, bool>(const std::string&, const sol::table&, float, float)>(DragFloat4),
 																sol::resolve<std::tuple<sol::as_table_t<std::vector<float>>, bool>(const std::string&, const sol::table&, float, float, float)>(DragFloat4),
 																sol::resolve<std::tuple<sol::as_table_t<std::vector<float>>, bool>(const std::string&, const sol::table&, float, float, float, const std::string&)>(DragFloat4),
-																sol::resolve<std::tuple<sol::as_table_t<std::vector<float>>, bool>(const std::string&, const sol::table&, float, float, float, const std::string&, float)>(DragFloat4)
+																sol::resolve<std::tuple<sol::as_table_t<std::vector<float>>, bool>(const std::string&, const sol::table&, float, float, float, const std::string&, int)>(DragFloat4)
 															));
 		ImGui.set_function("DragInt"						, sol::overload(
 																sol::resolve<std::tuple<int, bool>(const std::string&, int)>(DragInt),
 																sol::resolve<std::tuple<int, bool>(const std::string&, int, float)>(DragInt),
 																sol::resolve<std::tuple<int, bool>(const std::string&, int, float, int)>(DragInt),
 																sol::resolve<std::tuple<int, bool>(const std::string&, int, float, int, int)>(DragInt),
-																sol::resolve<std::tuple<int, bool>(const std::string&, int, float, int, int, const std::string&)>(DragInt)
+																sol::resolve<std::tuple<int, bool>(const std::string&, int, float, int, int, const std::string&)>(DragInt),
+																sol::resolve<std::tuple<int, bool>(const std::string&, int, float, int, int, const std::string&, int)>(DragInt)
 															));
 		ImGui.set_function("DragInt2"						, sol::overload(
 																sol::resolve<std::tuple<sol::as_table_t<std::vector<int>>, bool>(const std::string&, const sol::table&)>(DragInt2),
 																sol::resolve<std::tuple<sol::as_table_t<std::vector<int>>, bool>(const std::string&, const sol::table&, float)>(DragInt2),
 																sol::resolve<std::tuple<sol::as_table_t<std::vector<int>>, bool>(const std::string&, const sol::table&, float, int)>(DragInt2),
 																sol::resolve<std::tuple<sol::as_table_t<std::vector<int>>, bool>(const std::string&, const sol::table&, float, int, int)>(DragInt2),
-																sol::resolve<std::tuple<sol::as_table_t<std::vector<int>>, bool>(const std::string&, const sol::table&, float, int, int, const std::string&)>(DragInt2)
+																sol::resolve<std::tuple<sol::as_table_t<std::vector<int>>, bool>(const std::string&, const sol::table&, float, int, int, const std::string&)>(DragInt2),
+																sol::resolve<std::tuple<sol::as_table_t<std::vector<int>>, bool>(const std::string&, const sol::table&, float, int, int, const std::string&, int)>(DragInt2)
 															));											
 		ImGui.set_function("DragInt3"						, sol::overload(			
 																sol::resolve<std::tuple<sol::as_table_t<std::vector<int>>, bool>(const std::string&, const sol::table&)>(DragInt3),
 																sol::resolve<std::tuple<sol::as_table_t<std::vector<int>>, bool>(const std::string&, const sol::table&, float)>(DragInt3),
 																sol::resolve<std::tuple<sol::as_table_t<std::vector<int>>, bool>(const std::string&, const sol::table&, float, int)>(DragInt3),
 																sol::resolve<std::tuple<sol::as_table_t<std::vector<int>>, bool>(const std::string&, const sol::table&, float, int, int)>(DragInt3),
-																sol::resolve<std::tuple<sol::as_table_t<std::vector<int>>, bool>(const std::string&, const sol::table&, float, int, int, const std::string&)>(DragInt3)
+																sol::resolve<std::tuple<sol::as_table_t<std::vector<int>>, bool>(const std::string&, const sol::table&, float, int, int, const std::string&)>(DragInt3),
+																sol::resolve<std::tuple<sol::as_table_t<std::vector<int>>, bool>(const std::string&, const sol::table&, float, int, int, const std::string&, int)>(DragInt3)
 															));														
 		ImGui.set_function("DragInt4"						, sol::overload(			
 																sol::resolve<std::tuple<sol::as_table_t<std::vector<int>>, bool>(const std::string&, const sol::table&)>(DragInt4),
 																sol::resolve<std::tuple<sol::as_table_t<std::vector<int>>, bool>(const std::string&, const sol::table&, float)>(DragInt4),
 																sol::resolve<std::tuple<sol::as_table_t<std::vector<int>>, bool>(const std::string&, const sol::table&, float, int)>(DragInt4),
 																sol::resolve<std::tuple<sol::as_table_t<std::vector<int>>, bool>(const std::string&, const sol::table&, float, int, int)>(DragInt4),
-																sol::resolve<std::tuple<sol::as_table_t<std::vector<int>>, bool>(const std::string&, const sol::table&, float, int, int, const std::string&)>(DragInt4)
+																sol::resolve<std::tuple<sol::as_table_t<std::vector<int>>, bool>(const std::string&, const sol::table&, float, int, int, const std::string&)>(DragInt4),
+																sol::resolve<std::tuple<sol::as_table_t<std::vector<int>>, bool>(const std::string&, const sol::table&, float, int, int, const std::string&, int)>(DragInt4)
 															));
 #pragma endregion Widgets: Drags
 
@@ -2372,28 +2793,29 @@ namespace sol_ImGui
 		ImGui.set_function("SliderFloat"					, sol::overload(
 																sol::resolve<std::tuple<float, bool>(const std::string&, float, float, float)>(SliderFloat),
 																sol::resolve<std::tuple<float, bool>(const std::string&, float, float, float, const std::string&)>(SliderFloat),
-																sol::resolve<std::tuple<float, bool>(const std::string&, float, float, float, const std::string&, float)>(SliderFloat)
+																sol::resolve<std::tuple<float, bool>(const std::string&, float, float, float, const std::string&, int)>(SliderFloat)
 															));
 		ImGui.set_function("SliderFloat2"					, sol::overload(
 																sol::resolve<std::tuple<sol::as_table_t<std::vector<float>>, bool>(const std::string&, const sol::table&, float, float)>(SliderFloat2),
 																sol::resolve<std::tuple<sol::as_table_t<std::vector<float>>, bool>(const std::string&, const sol::table&, float, float, const std::string&)>(SliderFloat2),
-																sol::resolve<std::tuple<sol::as_table_t<std::vector<float>>, bool>(const std::string&, const sol::table&, float, float, const std::string&, float)>(SliderFloat2)
+																sol::resolve<std::tuple<sol::as_table_t<std::vector<float>>, bool>(const std::string&, const sol::table&, float, float, const std::string&, int)>(SliderFloat2)
 															));
 		ImGui.set_function("SliderFloat3"					, sol::overload(
 																sol::resolve<std::tuple<sol::as_table_t<std::vector<float>>, bool>(const std::string&, const sol::table&, float, float)>(SliderFloat3),
 																sol::resolve<std::tuple<sol::as_table_t<std::vector<float>>, bool>(const std::string&, const sol::table&, float, float, const std::string&)>(SliderFloat3),
-																sol::resolve<std::tuple<sol::as_table_t<std::vector<float>>, bool>(const std::string&, const sol::table&, float, float, const std::string&, float)>(SliderFloat3)
+																sol::resolve<std::tuple<sol::as_table_t<std::vector<float>>, bool>(const std::string&, const sol::table&, float, float, const std::string&, int)>(SliderFloat3)
 															));
 		ImGui.set_function("SliderFloat4"					, sol::overload(
 																sol::resolve<std::tuple<sol::as_table_t<std::vector<float>>, bool>(const std::string&, const sol::table&, float, float)>(SliderFloat4),
 																sol::resolve<std::tuple<sol::as_table_t<std::vector<float>>, bool>(const std::string&, const sol::table&, float, float, const std::string&)>(SliderFloat4),
-																sol::resolve<std::tuple<sol::as_table_t<std::vector<float>>, bool>(const std::string&, const sol::table&, float, float, const std::string&, float)>(SliderFloat4)
+																sol::resolve<std::tuple<sol::as_table_t<std::vector<float>>, bool>(const std::string&, const sol::table&, float, float, const std::string&, int)>(SliderFloat4)
 															));
 		ImGui.set_function("SliderAngle"					, sol::overload(
 																sol::resolve<std::tuple<float, bool>(const std::string&, float)>(SliderAngle),
 																sol::resolve<std::tuple<float, bool>(const std::string&, float, float)>(SliderAngle),
 																sol::resolve<std::tuple<float, bool>(const std::string&, float, float, float)>(SliderAngle),
-																sol::resolve<std::tuple<float, bool>(const std::string&, float, float, float, const std::string&)>(SliderAngle)
+																sol::resolve<std::tuple<float, bool>(const std::string&, float, float, float, const std::string&)>(SliderAngle),
+																sol::resolve<std::tuple<float, bool>(const std::string&, float, float, float, const std::string&, int)>(SliderAngle)
 															));
 		ImGui.set_function("SliderInt"						, sol::overload(
 																sol::resolve<std::tuple<int, bool>(const std::string&, int, int, int)>(SliderInt),
@@ -2401,40 +2823,44 @@ namespace sol_ImGui
 															));
 		ImGui.set_function("SliderInt2"						, sol::overload(
 																sol::resolve<std::tuple<sol::as_table_t<std::vector<int>>, bool>(const std::string&, const sol::table&, int, int)>(SliderInt2),
-																sol::resolve<std::tuple<sol::as_table_t<std::vector<int>>, bool>(const std::string&, const sol::table&, int, int, const std::string&)>(SliderInt2)
+																sol::resolve<std::tuple<sol::as_table_t<std::vector<int>>, bool>(const std::string&, const sol::table&, int, int, const std::string&)>(SliderInt2),
+																sol::resolve<std::tuple<sol::as_table_t<std::vector<int>>, bool>(const std::string&, const sol::table&, int, int, const std::string&, int)>(SliderInt2)
 															));
 		ImGui.set_function("SliderInt3"						, sol::overload(
 																sol::resolve<std::tuple<sol::as_table_t<std::vector<int>>, bool>(const std::string&, const sol::table&, int, int)>(SliderInt3),
-																sol::resolve<std::tuple<sol::as_table_t<std::vector<int>>, bool>(const std::string&, const sol::table&, int, int, const std::string&)>(SliderInt3)
+																sol::resolve<std::tuple<sol::as_table_t<std::vector<int>>, bool>(const std::string&, const sol::table&, int, int, const std::string&)>(SliderInt3),
+																sol::resolve<std::tuple<sol::as_table_t<std::vector<int>>, bool>(const std::string&, const sol::table&, int, int, const std::string&, int)>(SliderInt3)
 															));
 		ImGui.set_function("SliderInt4"						, sol::overload(
 																sol::resolve<std::tuple<sol::as_table_t<std::vector<int>>, bool>(const std::string&, const sol::table&, int, int)>(SliderInt4),
-																sol::resolve<std::tuple<sol::as_table_t<std::vector<int>>, bool>(const std::string&, const sol::table&, int, int, const std::string&)>(SliderInt4)
+																sol::resolve<std::tuple<sol::as_table_t<std::vector<int>>, bool>(const std::string&, const sol::table&, int, int, const std::string&)>(SliderInt4),
+																sol::resolve<std::tuple<sol::as_table_t<std::vector<int>>, bool>(const std::string&, const sol::table&, int, int, const std::string&, int)>(SliderInt4)
 															));
 		ImGui.set_function("VSliderFloat"					, sol::overload(
 																sol::resolve<std::tuple<float, bool>(const std::string&, float, float, float, float, float)>(VSliderFloat),
 																sol::resolve<std::tuple<float, bool>(const std::string&, float, float, float, float, float, const std::string&)>(VSliderFloat),
-																sol::resolve<std::tuple<float, bool>(const std::string&, float, float, float, float, float, const std::string&, float)>(VSliderFloat)
+																sol::resolve<std::tuple<float, bool>(const std::string&, float, float, float, float, float, const std::string&, int)>(VSliderFloat)
 															));
 		ImGui.set_function("VSliderInt"						, sol::overload(
 																sol::resolve<std::tuple<int, bool>(const std::string&, float, float, int, int, int)>(VSliderInt),
-																sol::resolve<std::tuple<int, bool>(const std::string&, float, float, int, int, int, const std::string&)>(VSliderInt)
+																sol::resolve<std::tuple<int, bool>(const std::string&, float, float, int, int, int, const std::string&)>(VSliderInt),
+																sol::resolve<std::tuple<int, bool>(const std::string&, float, float, int, int, int, const std::string&, int)>(VSliderInt)
 															));
 #pragma endregion Widgets: Sliders
 
 #pragma region Widgets: Inputs using Keyboard
 		ImGui.set_function("InputText"						, sol::overload(
-																sol::resolve<std::tuple<std::string, bool>(const std::string&, std::string, unsigned int)>(InputText),
-																sol::resolve<std::tuple<std::string, bool>(const std::string&, std::string, unsigned int, int)>(InputText)
+																sol::resolve<std::tuple<std::string, bool>(const std::string&, std::string)>(InputText),
+																sol::resolve<std::tuple<std::string, bool>(const std::string&, std::string, int)>(InputText)
 															));
 		ImGui.set_function("InputTextMultiline"				, sol::overload(
-																sol::resolve<std::tuple<std::string, bool>(const std::string&, std::string, unsigned int)>(InputTextMultiline),
-																sol::resolve<std::tuple<std::string, bool>(const std::string&, std::string, unsigned int, float, float)>(InputTextMultiline),
-																sol::resolve<std::tuple<std::string, bool>(const std::string&, std::string, unsigned int, float, float, int)>(InputTextMultiline)
+																sol::resolve<std::tuple<std::string, bool>(const std::string&, std::string)>(InputTextMultiline),
+																sol::resolve<std::tuple<std::string, bool>(const std::string&, std::string, float, float)>(InputTextMultiline),
+																sol::resolve<std::tuple<std::string, bool>(const std::string&, std::string, float, float, int)>(InputTextMultiline)
 															));
 		ImGui.set_function("InputTextWithHint"				, sol::overload(
-																sol::resolve<std::tuple<std::string, bool>(const std::string&, const std::string&, std::string, unsigned int)>(InputTextWithHint),
-																sol::resolve<std::tuple<std::string, bool>(const std::string&, const std::string&, std::string, unsigned int, int)>(InputTextWithHint)
+																sol::resolve<std::tuple<std::string, bool>(const std::string&, const std::string&, std::string)>(InputTextWithHint),
+																sol::resolve<std::tuple<std::string, bool>(const std::string&, const std::string&, std::string, int)>(InputTextWithHint)
 															));
 		ImGui.set_function("InputFloat"						, sol::overload(
 																sol::resolve<std::tuple<float, bool>(const std::string&, float)>(InputFloat),
@@ -2543,12 +2969,11 @@ namespace sol_ImGui
 																sol::resolve<std::tuple<int, bool>(const std::string&, int, const sol::table&, int)>(ListBox),
 																sol::resolve<std::tuple<int, bool>(const std::string&, int, const sol::table&, int, int)>(ListBox)
 															));
-		ImGui.set_function("ListBoxHeader"					, sol::overload(
-																sol::resolve<bool(const std::string&, float, float)>(ListBoxHeader),
-																sol::resolve<bool(const std::string&, int)>(ListBoxHeader),
-																sol::resolve<bool(const std::string&, int, int)>(ListBoxHeader)
+		ImGui.set_function("BeginListBox"					, sol::overload(
+																sol::resolve<bool(const std::string&, float, float)>(BeginListBox),
+																sol::resolve<bool(const std::string&)>(BeginListBox)
 															));
-		ImGui.set_function("ListBoxFooter"					, ListBoxFooter);
+		ImGui.set_function("EndListBox"						, EndListBox);
 #pragma endregion Widgets: List Boxes
 
 #pragma region Widgets: Value() Helpers
@@ -2599,11 +3024,6 @@ namespace sol_ImGui
 		ImGui.set_function("OpenPopup"						, sol::overload(
 																sol::resolve<void(const std::string&)>(OpenPopup),
 																sol::resolve<void(const std::string&, int)>(OpenPopup)
-															));
-		ImGui.set_function("OpenPopupContextItem"			, sol::overload(
-																sol::resolve<bool()>(OpenPopupContextItem),
-																sol::resolve<bool(const std::string&)>(OpenPopupContextItem),
-																sol::resolve<bool(const std::string&, int)>(OpenPopupContextItem)
 															));
 		ImGui.set_function("CloseCurrentPopup"				, CloseCurrentPopup);
 		ImGui.set_function("BeginPopupContextItem"			, sol::overload(
@@ -2732,7 +3152,7 @@ namespace sol_ImGui
 		ImGui.set_function("GetItemRectMin"					, GetItemRectMin);
 		ImGui.set_function("GetItemRectMax"					, GetItemRectMax);
 		ImGui.set_function("GetItemRectSize"				, GetItemRectSize);
-		ImGui.set_function("SetItemAllowOverlap"			, SetItemAllowOverlap);
+		ImGui.set_function("SetNextItemAllowOverlap"			, SetNextItemAllowOverlap);
 #pragma endregion Item/Widgets Utilities
 
 #pragma region Miscellaneous Utilities
@@ -2743,11 +3163,6 @@ namespace sol_ImGui
 		ImGui.set_function("GetTime"						, GetTime);
 		ImGui.set_function("GetFrameCount"					, GetFrameCount);
 		ImGui.set_function("GetStyleColorName"				, GetStyleColorName);
-		ImGui.set_function("BeginChildFrame"				, sol::overload(
-																sol::resolve<bool(unsigned int, float, float)>(BeginChildFrame),
-																sol::resolve<bool(unsigned int, float, float, int)>(BeginChildFrame)
-															));
-		ImGui.set_function("EndChildFrame"					, EndChildFrame);
 #pragma endregion Miscellaneous Utilities
 
 #pragma region Text Utilities
@@ -2769,17 +3184,14 @@ namespace sol_ImGui
 #pragma endregion Color Utilities
 
 #pragma region Inputs Utilities: Keyboard
-		ImGui.set_function("GetKeyIndex"					, GetKeyIndex);
+//		ImGui.set_function("GetKeyIndex"					, GetKeyIndex);
 		ImGui.set_function("IsKeyDown"						, IsKeyDown);
 		ImGui.set_function("IsKeyPressed"					, sol::overload(
 																sol::resolve<bool(int)>(IsKeyPressed),
 																sol::resolve<bool(int, bool)>(IsKeyPressed)
 															));
 		ImGui.set_function("IsKeyReleased"					, IsKeyReleased);
-		ImGui.set_function("CaptureKeyboardFromApp"			, sol::overload(
-																sol::resolve<void()>(CaptureKeyboardFromApp),
-																sol::resolve<void(bool)>(CaptureKeyboardFromApp)
-															));
+		ImGui.set_function("SetNextFrameWantCaptureKeyboard", SetNextFrameWantCaptureKeyboard);
 #pragma endregion Inputs Utilities: Keyboard
 
 #pragma region Inputs Utilities: Mouse
@@ -2812,10 +3224,7 @@ namespace sol_ImGui
 															));
 		ImGui.set_function("GetMouseCursor"					, GetMouseCursor);
 		ImGui.set_function("SetMouseCursor"					, SetMouseCursor);
-		ImGui.set_function("CaptureMouseFromApp"			, sol::overload(
-																sol::resolve<void()>(CaptureMouseFromApp),
-																sol::resolve<void(bool)>(CaptureMouseFromApp)
-															));
+		ImGui.set_function("SetNextFrameWantCaptureMouse"			,SetNextFrameWantCaptureMouse);
 #pragma endregion Inputs Utilities: Mouse
 		
 #pragma region Clipboard Utilities
@@ -2824,3 +3233,5 @@ namespace sol_ImGui
 #pragma endregion Clipboard Utilities
 	}
 }
+
+#pragma clang diagnostic pop
