@@ -6,9 +6,12 @@
 
 #include <string>
 #include <tuple>
+#include <type_traits> // For checking type of argument passed to templated functions sol_ImGui::Init and sol_ImGui::InitEnum
 
+#ifdef __clang__
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wformat-security"
+#endif
 
 namespace sol_ImGui
 {
@@ -59,7 +62,11 @@ namespace sol_ImGui
 	inline bool IsWindowHovered()																		{ return ImGui::IsWindowHovered(); }
 	inline bool IsWindowHovered(int flags)																{ return ImGui::IsWindowHovered(static_cast<ImGuiHoveredFlags>(flags)); }
 	inline ImDrawList* GetWindowDrawList()																{ return nullptr; /* TODO: GetWindowDrawList() ==> UNSUPPORTED */ }
+	
+	#ifndef IMGUI_NO_DOCKING	// Define IMGUI_NO_DOCKING to disable this for compatibility with ImGui's master branch
 	inline float GetWindowDpiScale()																	{ return ImGui::GetWindowDpiScale(); }
+	#endif
+	
 	inline ImGuiViewport* GetWindowViewport()															{ return nullptr; /* TODO: GetWindowViewport() ==> UNSUPPORTED */ }
 	inline std::tuple<float, float> GetWindowPos()														{ const auto vec2{ ImGui::GetWindowPos() };  return std::make_tuple(vec2.x, vec2.y); }
 	inline std::tuple<float, float> GetWindowSize()														{ const auto vec2{ ImGui::GetWindowSize() };  return std::make_tuple(vec2.x, vec2.y); }
@@ -1590,6 +1597,7 @@ namespace sol_ImGui
 	inline void SetTabItemClosed(const std::string& tab_or_docked_window_label)							{ ImGui::SetTabItemClosed(tab_or_docked_window_label.c_str()); }
 
 	// Docking
+	#ifndef IMGUI_NO_DOCKING	// Define IMGUI_NO_DOCKING to disable these for compatibility with ImGui's master branch
 	inline void DockSpace(unsigned int id)																{ ImGui::DockSpace(id); }
 	inline void DockSpace(unsigned int id, float sizeX, float sizeY)									{ ImGui::DockSpace(id, { sizeX, sizeY }); }
 	inline void DockSpace(unsigned int id, float sizeX, float sizeY, int flags)							{ ImGui::DockSpace(id, { sizeX, sizeY }, static_cast<ImGuiDockNodeFlags>(flags)); }
@@ -1599,7 +1607,8 @@ namespace sol_ImGui
 	inline void SetNextWindowClass()																	{  /* TODO: SetNextWindowClass(...) ==> UNSUPPORTED */ }
 	inline unsigned int GetWindowDockID()																{ return ImGui::GetWindowDockID(); }
 	inline bool IsWindowDocked()																		{ return ImGui::IsWindowDocked(); }
-	
+	#endif
+
 	// Logging
 	inline void LogToTTY()																				{ ImGui::LogToTTY(); }
 	inline void LogToTTY(int auto_open_depth)															{ ImGui::LogToTTY(auto_open_depth); }
@@ -1735,9 +1744,10 @@ namespace sol_ImGui
 	
 // helper to fill enum values.
 #define ENUM_HELPER(prefix, val) #val , prefix##_##val
-
-	inline void InitEnums(sol::state& lua)
+	template <typename SolStateOrView>
+	inline void InitEnums(SolStateOrView& lua)
 	{
+		static_assert( std::is_same_v<SolStateOrView, sol::state> || std::is_same_v<SolStateOrView, sol::state_view>, "sol_ImGui::InitEnums only accepts sol::state& or sol::state_view&");
 #pragma region Window Flags
 		lua.new_enum("ImGuiWindowFlags",
 			ENUM_HELPER(ImGuiWindowFlags, None),
@@ -1760,7 +1770,10 @@ namespace sol_ImGui
 			ENUM_HELPER(ImGuiWindowFlags, NoNavInputs),
 			ENUM_HELPER(ImGuiWindowFlags, NoNavFocus),
 			ENUM_HELPER(ImGuiWindowFlags, UnsavedDocument),
+			#ifndef IMGUI_NO_DOCKING
+			,	// Gotta add the comma for correct syntax
 			ENUM_HELPER(ImGuiWindowFlags, NoDocking),
+			#endif
 			ENUM_HELPER(ImGuiWindowFlags, NoNav),
 			ENUM_HELPER(ImGuiWindowFlags, NoDecoration),
 			ENUM_HELPER(ImGuiWindowFlags, NoInputs),
@@ -1768,8 +1781,11 @@ namespace sol_ImGui
 			ENUM_HELPER(ImGuiWindowFlags, Tooltip),
 			ENUM_HELPER(ImGuiWindowFlags, Popup),
 			ENUM_HELPER(ImGuiWindowFlags, Modal),
-			ENUM_HELPER(ImGuiWindowFlags, ChildMenu),
+			ENUM_HELPER(ImGuiWindowFlags, ChildMenu)
+			#ifndef IMGUI_NO_DOCKING
+			,
 			ENUM_HELPER(ImGuiWindowFlags, DockNodeHost)
+			#endif
 		);
 #pragma endregion Window Flags
 
@@ -1935,7 +1951,9 @@ namespace sol_ImGui
 			ENUM_HELPER(ImGuiFocusedFlags, RootWindow),
 			ENUM_HELPER(ImGuiFocusedFlags, AnyWindow),
 			ENUM_HELPER(ImGuiFocusedFlags, NoPopupHierarchy),
+			#ifndef IMGUI_NO_DOCKING
 			ENUM_HELPER(ImGuiFocusedFlags, DockHierarchy),
+			#endif
 			ENUM_HELPER(ImGuiFocusedFlags, RootAndChildWindows)
 		);
 #pragma endregion Focused Flags
@@ -1947,7 +1965,9 @@ namespace sol_ImGui
 			ENUM_HELPER(ImGuiHoveredFlags, RootWindow),
 			ENUM_HELPER(ImGuiHoveredFlags, AnyWindow),
 			ENUM_HELPER(ImGuiHoveredFlags, NoPopupHierarchy),
+			#ifndef IMGUI_NO_DOCKING
 			ENUM_HELPER(ImGuiHoveredFlags, DockHierarchy),
+			#endif
 			ENUM_HELPER(ImGuiHoveredFlags, AllowWhenBlockedByPopup),
 			ENUM_HELPER(ImGuiHoveredFlags, AllowWhenBlockedByActiveItem),
 			ENUM_HELPER(ImGuiHoveredFlags, AllowWhenOverlappedByItem),
@@ -1967,6 +1987,7 @@ namespace sol_ImGui
 #pragma endregion Hovered Flags
 
 #pragma region DockNode Flags
+#ifndef IMGUI_NO_DOCKING
 		lua.new_enum("ImGuiDockNodeFlags",
 			ENUM_HELPER(ImGuiDockNodeFlags, None),
 			ENUM_HELPER(ImGuiDockNodeFlags, KeepAliveOnly),
@@ -1977,6 +1998,7 @@ namespace sol_ImGui
 			ENUM_HELPER(ImGuiDockNodeFlags, AutoHideTabBar),
 			ENUM_HELPER(ImGuiDockNodeFlags, NoUndocking)
 		);
+#endif
 #pragma endregion DockNode Flags
 
 #pragma region DragDrop Flags
@@ -2235,10 +2257,12 @@ namespace sol_ImGui
 			ENUM_HELPER(ImGuiConfigFlags, NoMouse),
 			ENUM_HELPER(ImGuiConfigFlags, NoMouseCursorChange),
 			ENUM_HELPER(ImGuiConfigFlags, NoKeyboard),
+			#ifndef IMGUI_NO_DOCKING
 			ENUM_HELPER(ImGuiConfigFlags, DockingEnable),
 			ENUM_HELPER(ImGuiConfigFlags, ViewportsEnable),
 			ENUM_HELPER(ImGuiConfigFlags, DpiEnableScaleViewports),
 			ENUM_HELPER(ImGuiConfigFlags, DpiEnableScaleFonts),
+			#endif
 			ENUM_HELPER(ImGuiConfigFlags, IsSRGB),
 			ENUM_HELPER(ImGuiConfigFlags, IsTouchScreen)
 		);
@@ -2250,10 +2274,13 @@ namespace sol_ImGui
 			ENUM_HELPER(ImGuiBackendFlags, HasGamepad),
 			ENUM_HELPER(ImGuiBackendFlags, HasMouseCursors),
 			ENUM_HELPER(ImGuiBackendFlags, HasSetMousePos),
-			ENUM_HELPER(ImGuiBackendFlags, RendererHasVtxOffset),
+			ENUM_HELPER(ImGuiBackendFlags, RendererHasVtxOffset)
+			#ifndef IMGUI_NO_DOCKING
+			,	// Gotta add the comma for correct syntax
 			ENUM_HELPER(ImGuiBackendFlags, PlatformHasViewports),
 			ENUM_HELPER(ImGuiBackendFlags, HasMouseHoveredViewport),
 			ENUM_HELPER(ImGuiBackendFlags, RendererHasViewports)
+			#endif
 		);
 #pragma endregion Backend Flags
 
@@ -2299,8 +2326,10 @@ namespace sol_ImGui
 			ENUM_HELPER(ImGuiCol, TabDimmed),
 			ENUM_HELPER(ImGuiCol, TabDimmedSelected),
 			ENUM_HELPER(ImGuiCol, TabDimmedSelectedOverline),
+			#ifndef IMGUI_NO_DOCKING
 			ENUM_HELPER(ImGuiCol, DockingPreview),
 			ENUM_HELPER(ImGuiCol, DockingEmptyBg),
+			#endif
 			ENUM_HELPER(ImGuiCol, PlotLines),
 			ENUM_HELPER(ImGuiCol, PlotLinesHovered),
 			ENUM_HELPER(ImGuiCol, PlotHistogram),
@@ -2356,7 +2385,9 @@ namespace sol_ImGui
 			ENUM_HELPER(ImGuiStyleVar, SeparatorTextBorderSize),
 			ENUM_HELPER(ImGuiStyleVar, SeparatorTextAlign),
 			ENUM_HELPER(ImGuiStyleVar, SeparatorTextPadding),
+			#ifndef IMGUI_NO_DOCKING
 			ENUM_HELPER(ImGuiStyleVar, DockingSeparatorSize),
+			#endif
 			ENUM_HELPER(ImGuiStyleVar, COUNT)
 		);
 #pragma endregion Style
@@ -2463,8 +2494,10 @@ namespace sol_ImGui
 
 	}
 	
-	inline void Init(sol::state& lua)
+	template <typename SolStateOrView>
+	inline void Init(SolStateOrView& lua)
 	{
+		static_assert( std::is_same_v<SolStateOrView, sol::state> || std::is_same_v<SolStateOrView, sol::state_view>, "sol_ImGui::Init only accepts sol::state& or sol::state_view&");
 		InitEnums(lua);
 		
 		sol::table ImGui = lua.create_named_table("ImGui");
@@ -2500,7 +2533,11 @@ namespace sol_ImGui
 																sol::resolve<bool()>(IsWindowHovered),
 																sol::resolve<bool(int)>(IsWindowHovered)
 															));
+		
+		#ifndef IMGUI_NO_DOCKING
 		ImGui.set_function("GetWindowDpiScale"				, GetWindowDpiScale);
+		#endif
+
 		ImGui.set_function("GetWindowPos"					, GetWindowPos);
 		ImGui.set_function("GetWindowSize"					, GetWindowSize);
 		ImGui.set_function("GetWindowWidth"					, GetWindowWidth);
@@ -3085,6 +3122,7 @@ namespace sol_ImGui
 #pragma endregion Tab Bars, Tabs
 
 #pragma region Docking
+#ifndef IMGUI_NO_DOCKING	// Define IMGUI_NO_DOCKING to disable these for compatibility with ImGui's master branch
 		ImGui.set_function("DockSpace"						, sol::overload(
 																sol::resolve<void(unsigned int)>(DockSpace),
 																sol::resolve<void(unsigned int, float, float)>(DockSpace),
@@ -3096,6 +3134,7 @@ namespace sol_ImGui
 															));
 		ImGui.set_function("GetWindowDockID"				, GetWindowDockID);
 		ImGui.set_function("IsWindowDocked"					, IsWindowDocked);
+#endif
 #pragma endregion Docking
 
 #pragma region Logging / Capture
@@ -3234,4 +3273,6 @@ namespace sol_ImGui
 	}
 }
 
+#ifdef __clang__
 #pragma clang diagnostic pop
+#endif
