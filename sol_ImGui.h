@@ -1,3 +1,25 @@
+// MIT License
+
+// Copyright (c) 2020 MSeys
+
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+
 #pragma once
 
 #include "imgui.h"
@@ -61,7 +83,7 @@ namespace sol_ImGui
 	inline bool IsWindowFocused(int flags)																{ return ImGui::IsWindowFocused(static_cast<ImGuiFocusedFlags>(flags)); }
 	inline bool IsWindowHovered()																		{ return ImGui::IsWindowHovered(); }
 	inline bool IsWindowHovered(int flags)																{ return ImGui::IsWindowHovered(static_cast<ImGuiHoveredFlags>(flags)); }
-	inline ImDrawList* GetWindowDrawList()																{ return nullptr; /* TODO: GetWindowDrawList() ==> UNSUPPORTED */ }
+	inline ImDrawList* GetWindowDrawList()																{ return ImGui::GetWindowDrawList(); }
 	
 	#ifndef IMGUI_NO_DOCKING	// Define IMGUI_NO_DOCKING to disable this for compatibility with ImGui's master branch
 	inline float GetWindowDpiScale()																	{ return ImGui::GetWindowDpiScale(); }
@@ -127,9 +149,7 @@ namespace sol_ImGui
 	// Parameters stacks (shared)
 	inline void PushFont(ImFont* pFont)																	{ ImGui::PushFont(pFont); }
 	inline void PopFont()																				{ ImGui::PopFont(); }
-#ifdef SOL_IMGUI_USE_COLOR_U32
 	inline void PushStyleColor(int idx, int col)														{ ImGui::PushStyleColor(static_cast<ImGuiCol>(idx), ImU32(col)); }
-#endif
 	inline void PushStyleColor(int idx, float colR, float colG, float colB, float colA)					{ ImGui::PushStyleColor(static_cast<ImGuiCol>(idx), { colR, colG, colB, colA }); }
 	inline void PopStyleColor()																			{ ImGui::PopStyleColor(); }
 	inline void PopStyleColor(int count)																{ ImGui::PopStyleColor(count); }
@@ -141,11 +161,9 @@ namespace sol_ImGui
 	inline ImFont* GetFont()																			{ return ImGui::GetFont(); }
 	inline float GetFontSize()																			{ return ImGui::GetFontSize(); }
 	inline std::tuple<float, float> GetFontTexUvWhitePixel()											{ const auto vec2{ ImGui::GetFontTexUvWhitePixel() };	return std::make_tuple(vec2.x, vec2.y); }
-#ifdef SOL_IMGUI_USE_COLOR_U32
 	inline int GetColorU32(int idx, float alphaMul)														{ return ImGui::GetColorU32(static_cast<ImGuiCol>(idx), alphaMul); }
 	inline int GetColorU32(float colR, float colG, float colB, float colA)								{ return ImGui::GetColorU32({ colR, colG, colB, colA }); }
 	inline int GetColorU32(int col)																		{ return ImGui::GetColorU32(ImU32(col)); }
-#endif
 	
 	// Parameters stacks (current window)
 	inline void PushItemWidth(float itemWidth)															{ ImGui::PushItemWidth(itemWidth); }
@@ -1673,7 +1691,6 @@ namespace sol_ImGui
 	inline std::tuple<float, float> CalcTextSize(const std::string& text, const std::string& text_end, bool hide_text_after_double_hash, float wrap_width)	{ const auto vec2{ ImGui::CalcTextSize(text.c_str(), text_end.c_str(), hide_text_after_double_hash, wrap_width) }; return std::make_tuple(vec2.x, vec2.y); }
 
 	// Color Utilities
-#ifdef SOL_IMGUI_USE_COLOR_U32
 	inline sol::as_table_t<std::vector<float>> ColorConvertU32ToFloat4(unsigned int in)
 	{
 		const auto vec4 = ImGui::ColorConvertU32ToFloat4(in);
@@ -1692,7 +1709,7 @@ namespace sol_ImGui
 		
 		return ImGui::ColorConvertFloat4ToU32({ float(r), float(g), float(b), float(a) });
 	}
-#endif
+
 	inline std::tuple<float, float, float> ColorConvertRGBtoHSV(float r, float g, float b)
 	{
 		float h{}, s{}, v{};
@@ -2495,12 +2512,76 @@ namespace sol_ImGui
 	}
 	
 	template <typename SolStateOrView>
+	inline void InitUserTypes(SolStateOrView& lua)
+	{
+		static_assert( std::is_same_v<SolStateOrView, sol::state> || std::is_same_v<SolStateOrView, sol::state_view>, "sol_ImGui::InitUserTypes only accepts sol::state& or sol::state_view&");
+		
+		lua.new_usertype<ImVec2>("ImVec2",
+			sol::constructors<ImVec2(), ImVec2(float, float)>(),
+			"x", &ImVec2::x,
+			"y", &ImVec2::y
+		);
+
+		lua.new_usertype<ImVec4>("ImVec4",
+			sol::constructors<ImVec4(), ImVec4(float, float, float, float)>(),
+			"x", &ImVec4::x,
+			"y", &ImVec4::y,
+			"z", &ImVec4::z,
+			"w", &ImVec4::w
+		);
+
+		lua.new_usertype<ImDrawList>("ImDrawList",
+			sol::no_constructor, // Prevent creating ImDrawList directly in Lua
+
+			// Clip Rects
+			"PushClipRect", 			&ImDrawList::PushClipRect,
+			"PushClipRectFullScreen", 	&ImDrawList::PushClipRectFullScreen,
+			"PopClipRect", 				&ImDrawList::PopClipRect,
+
+			// Texture ID
+			"PushTextureID", 			&ImDrawList::PushTextureID,
+			"PopTextureID", 			&ImDrawList::PopTextureID,
+
+			// Primitives
+			"AddLine", 					&ImDrawList::AddLine,
+			"AddRect", 					&ImDrawList::AddRect,
+			"AddRectFilled", 			&ImDrawList::AddRectFilled,
+			"AddCircle", 				&ImDrawList::AddCircle,
+			"AddCircleFilled", 			&ImDrawList::AddCircleFilled,
+			"AddTriangle", 				&ImDrawList::AddTriangle,
+			"AddTriangleFilled", 		&ImDrawList::AddTriangleFilled,
+			"AddText", 					static_cast<void(ImDrawList::*)(const ImVec2&, ImU32, const char*, const char*)>(&ImDrawList::AddText),
+			"AddQuad", 					&ImDrawList::AddQuad,
+			"AddQuadFilled", 			&ImDrawList::AddQuadFilled,
+			"AddNgon", 					&ImDrawList::AddNgon,
+			"AddNgonFilled", 			&ImDrawList::AddNgonFilled,
+
+			// Path API
+			"PathClear", 				&ImDrawList::PathClear,
+			"PathLineTo", 				&ImDrawList::PathLineTo,
+			"PathStroke", 				&ImDrawList::PathStroke,
+			"PathFillConvex", 			&ImDrawList::PathFillConvex,
+			"PathArcTo", 				&ImDrawList::PathArcTo,
+			"PathBezierCubicCurveTo", 	&ImDrawList::PathBezierCubicCurveTo,
+			"PathRect", 				&ImDrawList::PathRect,
+
+			// Images
+			"AddImage", 				&ImDrawList::AddImage,
+			"AddImageQuad", 			&ImDrawList::AddImageQuad,
+			"AddImageRounded", 			&ImDrawList::AddImageRounded
+		);
+	}
+
+	template <typename SolStateOrView>
 	inline void Init(SolStateOrView& lua)
 	{
 		static_assert( std::is_same_v<SolStateOrView, sol::state> || std::is_same_v<SolStateOrView, sol::state_view>, "sol_ImGui::Init only accepts sol::state& or sol::state_view&");
 		InitEnums(lua);
 		
+		InitUserTypes(lua);
+
 		sol::table ImGui = lua.create_named_table("ImGui");
+
 
 #pragma region Windows
 		ImGui.set_function("Begin"							, sol::overload(
@@ -2584,6 +2665,7 @@ namespace sol_ImGui
 																sol::resolve<void(const std::string&)>(SetWindowFocus)
 															));
 		ImGui.set_function("SetWindowFontScale"				, SetWindowFontScale);
+		ImGui.set_function("GetWindowDrawList"				, GetWindowDrawList);
 #pragma endregion Window Utilities
 		
 #pragma region Content Region
@@ -2622,14 +2704,10 @@ namespace sol_ImGui
 #pragma region Parameters stacks (shared)
 		ImGui.set_function("PushFont"						, PushFont);
 		ImGui.set_function("PopFont"						, PopFont);
-#ifdef SOL_IMGUI_USE_COLOR_U32
 		ImGui.set_function("PushStyleColor"					, sol::overload(
 																sol::resolve<void(int, int)>(PushStyleColor),
 																sol::resolve<void(int, float, float, float, float)>(PushStyleColor)
 															));
-#else
-		ImGui.set_function("PushStyleColor"					, PushStyleColor);
-#endif
 		ImGui.set_function("PopStyleColor"					, sol::overload(
 																sol::resolve<void()>(PopStyleColor),
 																sol::resolve<void(int)>(PopStyleColor)
@@ -2638,13 +2716,11 @@ namespace sol_ImGui
 		ImGui.set_function("GetFont"						, GetFont);
 		ImGui.set_function("GetFontSize"					, GetFontSize);
 		ImGui.set_function("GetFontTexUvWhitePixel"			, GetFontTexUvWhitePixel);
-#ifdef SOL_IMGUI_USE_COLOR_U32
 		ImGui.set_function("GetColorU32"					, sol::overload(
 																sol::resolve<int(int, float)>(GetColorU32),
 																sol::resolve<int(float, float, float, float)>(GetColorU32), 
 																sol::resolve<int(int)>(GetColorU32)
 															));
-#endif
 #pragma endregion Parameters stacks (shared)
 		
 #pragma region Parameters stacks (current window)
@@ -2978,6 +3054,7 @@ namespace sol_ImGui
 																sol::resolve<bool(const std::string&, int)>(TreeNodeEx),
 																sol::resolve<bool(const std::string&, int, const std::string&)>(TreeNodeEx)
 															));
+		ImGui.set_function("TreePop"						, TreePop);
 		ImGui.set_function("TreePush"						, TreePush);
 		ImGui.set_function("GetTreeNodeToLabelSpacing"		, GetTreeNodeToLabelSpacing);
 		ImGui.set_function("CollapsingHeader"				, sol::overload(
@@ -3214,12 +3291,18 @@ namespace sol_ImGui
 #pragma endregion Text Utilities
 
 #pragma region Color Utilities
-#ifdef SOL_IMGUI_USE_COLOR_U32
 		ImGui.set_function("ColorConvertU32ToFloat4"		, ColorConvertU32ToFloat4);
 		ImGui.set_function("ColorConvertFloat4ToU32"		, ColorConvertFloat4ToU32);
-#endif
 		ImGui.set_function("ColorConvertRGBtoHSV"			, ColorConvertRGBtoHSV);
 		ImGui.set_function("ColorConvertHSVtoRGB"			, ColorConvertHSVtoRGB);
+		lua.set_function("IM_COL32", [](sol::variadic_args args) { 								// Want this exposed globally
+			if (args.size() == 1 && args[0].is<sol::table>())
+			{ 
+				sol::table t = args[0].as<sol::table>(); 
+				return IM_COL32(t.get_or(1, 0), t.get_or(2, 0), t.get_or(3, 0), t.get_or(4, 255)); 
+			} 
+			return IM_COL32(args.get<int>(0), args.get<int>(1), args.get<int>(2), args.size() >= 4 ? args.get<int>(3) : 255); 
+		});
 #pragma endregion Color Utilities
 
 #pragma region Inputs Utilities: Keyboard
