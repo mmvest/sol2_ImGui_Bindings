@@ -2743,7 +2743,8 @@ namespace sol_ImGui
 		ImGui.set_function("Separator"						, Separator);
 		ImGui.set_function("SameLine"						, sol::overload(
 																sol::resolve<void()>(SameLine), 
-																sol::resolve<void(float)>(SameLine)
+																sol::resolve<void(float)>(SameLine),
+																sol::resolve<void(float, float)>(SameLine)
 															));
 		ImGui.set_function("NewLine"						, NewLine);
 		ImGui.set_function("Spacing"						, Spacing);
