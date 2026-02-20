@@ -24,7 +24,7 @@
 
 #include "imgui.h"
 #include "imgui_stdlib.h"
-#include "sol/sol.hpp"
+#include "sol.hpp"
 
 #include <string>
 #include <tuple>
@@ -41,28 +41,13 @@ namespace sol_ImGui
 	inline bool Begin(const std::string& name)															{ return ImGui::Begin(name.c_str()); }
 	inline std::tuple<bool, bool> Begin(const std::string& name, bool open)
 	{
-		if (!open) return std::make_tuple(false, false);
-
 		bool shouldDraw = ImGui::Begin(name.c_str(), &open);
-
-		if(!open)
-		{
-			ImGui::End();
-			return std::make_tuple(false, false);
-		}
 		
 		return std::make_tuple(open, shouldDraw);
 	}
 	inline std::tuple<bool, bool> Begin(const std::string& name, bool open, int flags)
 	{
-		if (!open) return std::make_tuple(false, false);
 		bool shouldDraw = ImGui::Begin(name.c_str(), &open, static_cast<ImGuiWindowFlags_>(flags));
-
-		if(!open)
-		{
-			ImGui::End();
-			return std::make_tuple(false, false);
-		}
 		
 		return std::make_tuple(open, shouldDraw);
 	}
@@ -85,7 +70,7 @@ namespace sol_ImGui
 	inline bool IsWindowHovered(int flags)																{ return ImGui::IsWindowHovered(static_cast<ImGuiHoveredFlags>(flags)); }
 	inline ImDrawList* GetWindowDrawList()																{ return ImGui::GetWindowDrawList(); }
 	
-	#ifndef IMGUI_NO_DOCKING	// Define IMGUI_NO_DOCKING to disable this for compatibility with ImGui's master branch
+	#ifdef IMGUI_DOCKING	// Define IMGUI_DOCKING to enable this. Placed this here for compatibility with ImGui's master branch.
 	inline float GetWindowDpiScale()																	{ return ImGui::GetWindowDpiScale(); }
 	#endif
 	
@@ -233,22 +218,7 @@ namespace sol_ImGui
 	inline bool SmallButton(const std::string& label)													{ return ImGui::SmallButton(label.c_str()); }
 	inline bool InvisibleButton(const std::string& stringID, float sizeX, float sizeY)					{ return ImGui::InvisibleButton(stringID.c_str(), { sizeX, sizeY }); }
 	inline bool ArrowButton(const std::string& stringID, int dir)										{ return ImGui::ArrowButton(stringID.c_str(), static_cast<ImGuiDir>(dir)); }
-	inline void Image(uintptr_t textureID, float width, float height) {
-		ImGui::Image(reinterpret_cast<void*>(textureID), ImVec2(width, height));
-	}
-	inline void Image(uintptr_t textureID, float width, float height,
-		float uv0_x, float uv0_y, float uv1_x, float uv1_y,
-		float tint_r, float tint_g, float tint_b, float tint_a,
-		float border_r, float border_g, float border_b, float border_a) {
-		ImGui::Image(
-			reinterpret_cast<void*>(textureID),
-			ImVec2(width, height),
-			ImVec2(uv0_x, uv0_y),
-			ImVec2(uv1_x, uv1_y),
-			ImVec4(tint_r, tint_g, tint_b, tint_a),
-			ImVec4(border_r, border_g, border_b, border_a)
-		);
-	}
+	inline void Image(void* textureID, float width, float height)										{ ImGui::Image(textureID, ImVec2(width, height)); }
 	//inline void ImageButton()																			{ /* TODO: ImageButton(...) ==> UNSUPPORTED */ }
 	inline std::tuple<bool, bool> Checkbox(const std::string& label, bool v)
 	{
@@ -1630,7 +1600,7 @@ namespace sol_ImGui
 	inline void SetTabItemClosed(const std::string& tab_or_docked_window_label)							{ ImGui::SetTabItemClosed(tab_or_docked_window_label.c_str()); }
 
 	// Docking
-	#ifndef IMGUI_NO_DOCKING	// Define IMGUI_NO_DOCKING to disable these for compatibility with ImGui's master branch
+	#ifdef IMGUI_DOCKING	// Define IMGUI_DOCKING to enable this. Placed this here for compatibility with ImGui's master branch.
 	inline void DockSpace(unsigned int id)																{ ImGui::DockSpace(id); }
 	inline void DockSpace(unsigned int id, float sizeX, float sizeY)									{ ImGui::DockSpace(id, { sizeX, sizeY }); }
 	inline void DockSpace(unsigned int id, float sizeX, float sizeY, int flags)							{ ImGui::DockSpace(id, { sizeX, sizeY }, static_cast<ImGuiDockNodeFlags>(flags)); }
@@ -2252,7 +2222,14 @@ namespace sol_ImGui
 			ENUM_HELPER(ImGuiMod, Mask_),
 			ENUM_HELPER(ImGuiKey, NamedKey_BEGIN),
 			ENUM_HELPER(ImGuiKey, NamedKey_END),
-			ENUM_HELPER(ImGuiKey, NamedKey_COUNT)
+			ENUM_HELPER(ImGuiKey, NamedKey_COUNT),
+#ifdef IMGUI_DISABLE_OBSOLETE_KEYIO
+			ENUM_HELPER(ImGuiKey, NamedKey_COUNT),
+			ENUM_HELPER(ImGuiKey, NamedKey_BEGIN)
+#else
+			ENUM_HELPER(ImGuiKey, KeysData_SIZE),
+			ENUM_HELPER(ImGuiKey, KeysData_OFFSET)
+#endif
 		);
 #pragma endregion Key
 
@@ -2751,7 +2728,8 @@ namespace sol_ImGui
 		ImGui.set_function("Separator"						, Separator);
 		ImGui.set_function("SameLine"						, sol::overload(
 																sol::resolve<void()>(SameLine), 
-																sol::resolve<void(float)>(SameLine)
+																sol::resolve<void(float)>(SameLine),
+																sol::resolve<void(float, float)>(SameLine)
 															));
 		ImGui.set_function("NewLine"						, NewLine);
 		ImGui.set_function("Spacing"						, Spacing);
@@ -2827,24 +2805,10 @@ namespace sol_ImGui
 																sol::resolve<void(float, float, float, const std::string&)>(ProgressBar)
 															));
 		ImGui.set_function("Bullet"							, Bullet);
-		ImGui.set_function("Image", sol::overload(
-			[](uintptr_t textureID, float width, float height) {
-				ImGui::Image(reinterpret_cast<void*>(textureID), ImVec2(width, height));
-			},
-			[](uintptr_t textureID, float width, float height,
-			   float uv0_x, float uv0_y, float uv1_x, float uv1_y,
-			   float tint_r, float tint_g, float tint_b, float tint_a,
-			   float border_r, float border_g, float border_b, float border_a) {
-				ImGui::Image(
-					reinterpret_cast<void*>(textureID),
-					ImVec2(width, height),
-					ImVec2(uv0_x, uv0_y),
-					ImVec2(uv1_x, uv1_y),
-					ImVec4(tint_r, tint_g, tint_b, tint_a),
-					ImVec4(border_r, border_g, border_b, border_a)
-				);
-			}
-		));
+		ImGui.set_function("Image"							, sol::overload(
+																sol::resolve<void(void*, float, float)>(Image),
+																sol::resolve<void(void*, const ImVec2&, const ImVec2&, const ImVec2&, const ImVec4&, const ImVec4&)>(ImGui::Image) // Original ImGui::Image
+															));
 #pragma endregion Widgets: Main
 		
 #pragma region Widgets: Combo Box

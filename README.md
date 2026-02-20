@@ -1,28 +1,54 @@
 # sol2 Lua bindings for Dear ImGui
 
-This repository has been updated from the original fork on 7/24/2024 to commit of Dear ImGui 271910e3495e686a252b4b85369dec0605ba0d20 on the docking branch (version 1.91.0 WIP).
+`sol2_ImGui_Bindings`is a single-header set of Lua bindings for Dear ImGui built on top of sol2.
 
+## What has changed
 
-## Notes
-- This uses the latest sol2 version (as of July 2020), the repo is located at https://github.com/ThePhD/sol2/.
-- These bindings are based on one of the latest version of Dear ImGui Docking Branch. Comment what you don't need or breaks.
-- I've hid the U32 related function with a define (SOL_IMGUI_USE_COLOR_U32), if you wish to use these, define that!
+These are the major differences between `sol_ImGui.h` and the original:
+- Added `#include "imgui_stdlib.h"` so Lua can pass `std::string` to `InputText*` without manual buffer sizes.
+- The header now expects a C++17 compiler (`std::is_same_v`).
+- `Init` used to only supported `sol::state&` in `InitEnums()`/`Init()`. It now supports templates `InitEnums()`, `InitUserTypes()`, and `Init()` to accept `sol::state&` or `sol::state_view&`.
+- `BeginChild` now uses `ImGuiChildFlags` (not the old `border: bool` parameter), and I expose `ImGuiChildFlags` to Lua.
+- Docking-related pieces are guarded with `#ifdef IMGUI_DOCKING` so the header can still compile against non-docking builds.
+- Support for `GetWindowDrawList()` and `ImDrawList` added so Lua can actually draw via the draw list API.
+- `Image(textureID, width, height)` is now supported.
+- Swapped input text handling from `buf_size` for `InputText*` to now use ImGui's `imgui_stdlib` overloads so Lua doesn't need to guess buffer sizes.
+- Removed `CUSTOM_IMGUI` and U32-color helper macros.
 
-## How to Use
+## Requirements
+
+- Dear ImGui
+- sol2
+
+## How I use it
+
+In C++ I call `sol_ImGui::Init(...)` when I set up Lua:
+
 ```cpp
-  // Call this function!
-  sol_ImGui::Init(lua); // lua being your sol::state
+    lua_state = lua_open();
+
+    luaL_openlibs(lua_state);
+
+    sol::state_view sol_state_view(lua_state);
+
+    // Initialize ImGui Lua bindings
+    sol_ImGui::Init(sol_state_view);
 ```
 
-## Documentation
-You can find all the supported functions and overloads in meta.lua. This file is set up to provide autocomplete, if the right VSCode plugin is used.
+Then in Lua I set something up like:
+```lua
+if ImGui.Begin("Hello, UiForge!", true, ImGuiWindowFlags.MenuBar) then
+  -- Do lua ImGui things here!
+end
 
-## Major updates
+--end the window
+ImGui.End()
+```
 
-- Language in this README and elsewhere has been updated to reflect the naming conventions of the Dear ImGui project, Namely, calling it "Dear ImGui" instead of "ImGui".
-- Update to newer version of Dear ImGui, including removing deprecated functions, adding new functions, and updating parameters.
-- Update to use the versions of InputText* from imgui_stdlib.h that allow for std::string as a direct input and automatic resizing. No reason to pass a buffersize from Lua, which manages string sizes itself.
-- Creating the meta.lua file for dedicated documentation, intellisence, and static analysis.
-- CUSTOM_IMGUI macro and its contents have been removed.
-- Built a custom macro to help maintain enumerations. Its designed to make using multi-select easy to update an entire enum in one go.
-- Re-ordered enums to match imgui.h
+## Documentation / autocomplete
+
+`meta.lua` is the list of functions that is exposed and it provides intellisense with something to work with when working in lua. It is definitely missing some overloads and function signatures, but works for the most part. Don't require meta.lua in your lua scripts... that'll probably just break everything.
+
+## Unsupported pieces
+
+As a final note, not everything in Dear ImGui is bound here. Some wrappers still say `UNSUPPORTED` in the header and will likely stay that way unless I end up needing them for my personal projects. There are some libraries that provide significantly more comprehensive lua bindings, but these seem to get the job done for me.
