@@ -30,6 +30,14 @@
 #include <tuple>
 #include <type_traits> // For checking type of argument passed to templated functions sol_ImGui::Init and sol_ImGui::InitEnum
 
+// Compatibility aliases for newer Dear ImGui versions.
+#ifndef ImGuiChildFlags_Border
+#define ImGuiChildFlags_Border ImGuiChildFlags_Borders
+#endif
+#ifndef ImGuiPopupFlags_MouseButtonDefault_
+#define ImGuiPopupFlags_MouseButtonDefault_ ImGuiPopupFlags_MouseButtonRight
+#endif
+
 #ifdef __clang__
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wformat-security"
@@ -218,7 +226,13 @@ namespace sol_ImGui
 	inline bool SmallButton(const std::string& label)													{ return ImGui::SmallButton(label.c_str()); }
 	inline bool InvisibleButton(const std::string& stringID, float sizeX, float sizeY)					{ return ImGui::InvisibleButton(stringID.c_str(), { sizeX, sizeY }); }
 	inline bool ArrowButton(const std::string& stringID, int dir)										{ return ImGui::ArrowButton(stringID.c_str(), static_cast<ImGuiDir>(dir)); }
-	inline void Image(void* textureID, float width, float height)										{ ImGui::Image(textureID, ImVec2(width, height)); }
+	inline void Image(void* textureID, float width, float height)										{ ImGui::Image(ImTextureRef(textureID), ImVec2(width, height)); }
+	inline void Image(void* textureID, const ImVec2& image_size, const ImVec2& uv0, const ImVec2& uv1, const ImVec4& tint_col, const ImVec4& border_col)
+	{
+		// ImGui changed Image() to use ImTextureRef and removed the 'border_col' parameter. To keep compatibility,
+		// we map the old signature to ImageWithBg() and treat the legacy border color as a background fill.
+		ImGui::ImageWithBg(ImTextureRef(textureID), image_size, uv0, uv1, border_col, tint_col);
+	}
 	//inline void ImageButton()																			{ /* TODO: ImageButton(...) ==> UNSUPPORTED */ }
 	inline std::tuple<bool, bool> Checkbox(const std::string& label, bool v)
 	{
@@ -2807,7 +2821,7 @@ namespace sol_ImGui
 		ImGui.set_function("Bullet"							, Bullet);
 		ImGui.set_function("Image"							, sol::overload(
 																sol::resolve<void(void*, float, float)>(Image),
-																sol::resolve<void(void*, const ImVec2&, const ImVec2&, const ImVec2&, const ImVec4&, const ImVec4&)>(ImGui::Image) // Original ImGui::Image
+																sol::resolve<void(void*, const ImVec2&, const ImVec2&, const ImVec2&, const ImVec4&, const ImVec4&)>(Image)
 															));
 #pragma endregion Widgets: Main
 		
