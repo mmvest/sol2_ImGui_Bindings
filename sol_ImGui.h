@@ -2538,8 +2538,9 @@ namespace sol_ImGui
 			"PopClipRect", 				&ImDrawList::PopClipRect,
 
 			// Texture ID
-			"PushTextureID", 			&ImDrawList::PushTextureID,
-			"PopTextureID", 			&ImDrawList::PopTextureID,
+			// Wrapped for the same ImTextureRef reason as the AddImage* bindings below.
+			"PushTextureID", 			[](ImDrawList& self, void* textureID) { self.PushTexture(ImTextureRef(textureID)); },
+			"PopTextureID", 			[](ImDrawList& self) { self.PopTexture(); },
 
 			// Primitives
 			"AddLine", 					&ImDrawList::AddLine,
@@ -2565,9 +2566,26 @@ namespace sol_ImGui
 			"PathRect", 				&ImDrawList::PathRect,
 
 			// Images
-			"AddImage", 				&ImDrawList::AddImage,
-			"AddImageQuad", 			&ImDrawList::AddImageQuad,
-			"AddImageRounded", 			&ImDrawList::AddImageRounded
+			// ImGui 1.92 changed the texture parameter from ImTextureID (an integer) to the
+			// ImTextureRef struct. Binding the member functions directly makes sol2 reinterpret
+			// the Lua texture handle (a lightuserdata) as an ImTextureRef*, filling _TexData with
+			// garbage that ImGui then dereferences (assert/crash in ImDrawList::PushTexture).
+			// Wrap them so the handle goes through ImTextureRef(void*), which sets _TexData = NULL,
+			// same as the ImGui.Image wrapper above.
+			"AddImage", 				sol::overload(
+											[](ImDrawList& self, void* textureID, const ImVec2& p_min, const ImVec2& p_max) { self.AddImage(ImTextureRef(textureID), p_min, p_max); },
+											[](ImDrawList& self, void* textureID, const ImVec2& p_min, const ImVec2& p_max, const ImVec2& uv_min, const ImVec2& uv_max) { self.AddImage(ImTextureRef(textureID), p_min, p_max, uv_min, uv_max); },
+											[](ImDrawList& self, void* textureID, const ImVec2& p_min, const ImVec2& p_max, const ImVec2& uv_min, const ImVec2& uv_max, ImU32 col) { self.AddImage(ImTextureRef(textureID), p_min, p_max, uv_min, uv_max, col); }
+										),
+			"AddImageQuad", 			sol::overload(
+											[](ImDrawList& self, void* textureID, const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, const ImVec2& p4) { self.AddImageQuad(ImTextureRef(textureID), p1, p2, p3, p4); },
+											[](ImDrawList& self, void* textureID, const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, const ImVec2& p4, const ImVec2& uv1, const ImVec2& uv2, const ImVec2& uv3, const ImVec2& uv4) { self.AddImageQuad(ImTextureRef(textureID), p1, p2, p3, p4, uv1, uv2, uv3, uv4); },
+											[](ImDrawList& self, void* textureID, const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, const ImVec2& p4, const ImVec2& uv1, const ImVec2& uv2, const ImVec2& uv3, const ImVec2& uv4, ImU32 col) { self.AddImageQuad(ImTextureRef(textureID), p1, p2, p3, p4, uv1, uv2, uv3, uv4, col); }
+										),
+			"AddImageRounded", 			sol::overload(
+											[](ImDrawList& self, void* textureID, const ImVec2& p_min, const ImVec2& p_max, const ImVec2& uv_min, const ImVec2& uv_max, ImU32 col, float rounding) { self.AddImageRounded(ImTextureRef(textureID), p_min, p_max, uv_min, uv_max, col, rounding); },
+											[](ImDrawList& self, void* textureID, const ImVec2& p_min, const ImVec2& p_max, const ImVec2& uv_min, const ImVec2& uv_max, ImU32 col, float rounding, int flags) { self.AddImageRounded(ImTextureRef(textureID), p_min, p_max, uv_min, uv_max, col, rounding, (ImDrawFlags)flags); }
+										)
 		);
 	}
 
