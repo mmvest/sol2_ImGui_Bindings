@@ -77,7 +77,13 @@ namespace sol_ImGui
 	inline bool IsWindowHovered()																		{ return ImGui::IsWindowHovered(); }
 	inline bool IsWindowHovered(int flags)																{ return ImGui::IsWindowHovered(static_cast<ImGuiHoveredFlags>(flags)); }
 	inline ImDrawList* GetWindowDrawList()																{ return ImGui::GetWindowDrawList(); }
-	
+	inline ImDrawList* GetBackgroundDrawList()															{ return ImGui::GetBackgroundDrawList(); }
+	inline ImDrawList* GetForegroundDrawList()															{ return ImGui::GetForegroundDrawList(); }
+	inline std::tuple<float, float> GetDisplaySize()													{ const auto vec2{ ImGui::GetIO().DisplaySize };  return std::make_tuple(vec2.x, vec2.y); }
+	inline std::tuple<float, float> GetMouseWheel()														{ const auto& io{ ImGui::GetIO() };  return std::make_tuple(io.MouseWheel, io.MouseWheelH); }
+	inline bool WantCaptureMouse()																		{ return ImGui::GetIO().WantCaptureMouse; }
+	inline bool WantCaptureKeyboard()																	{ return ImGui::GetIO().WantCaptureKeyboard; }
+
 	#ifdef IMGUI_DOCKING	// Define IMGUI_DOCKING to enable this. Placed this here for compatibility with ImGui's master branch.
 	inline float GetWindowDpiScale()																	{ return ImGui::GetWindowDpiScale(); }
 	#endif
@@ -1676,7 +1682,7 @@ namespace sol_ImGui
 	inline bool IsRectVisible(float minX, float minY, float maxX, float maxY)							{ return ImGui::IsRectVisible({ minX, minY }, { maxX, maxY }); }
 	inline double GetTime()																				{ return ImGui::GetTime(); }
 	inline int GetFrameCount()																			{ return ImGui::GetFrameCount(); }
-	/* TODO: GetBackgroundDrawList(), GetForeGroundDrawList(), GetDrawListSharedData() ==> UNSUPPORTED */
+	/* GetBackgroundDrawList() and GetForegroundDrawList() are bound in the Window Utilities region. GetDrawListSharedData() ==> UNSUPPORTED */
 	inline std::string GetStyleColorName(int idx)														{ return std::string(ImGui::GetStyleColorName(static_cast<ImGuiCol>(idx))); }
 	/* TODO: SetStateStorage(), GetStateStorage(), CalcListClipping() ==> UNSUPPORTED */
 	//inline bool BeginChild(unsigned int id, float sizeX, float sizeY)								{ return ImGui::BeginChild(id, { sizeX, sizeY }); }
@@ -2683,6 +2689,9 @@ namespace sol_ImGui
 															));
 		ImGui.set_function("SetWindowFontScale"				, SetWindowFontScale);
 		ImGui.set_function("GetWindowDrawList"				, GetWindowDrawList);
+		ImGui.set_function("GetBackgroundDrawList"			, GetBackgroundDrawList);
+		ImGui.set_function("GetForegroundDrawList"			, GetForegroundDrawList);
+		ImGui.set_function("GetDisplaySize"					, GetDisplaySize);
 #pragma endregion Window Utilities
 		
 #pragma region Content Region
@@ -2728,6 +2737,14 @@ namespace sol_ImGui
 		ImGui.set_function("PopStyleColor"					, sol::overload(
 																sol::resolve<void()>(PopStyleColor),
 																sol::resolve<void(int)>(PopStyleColor)
+															));
+		ImGui.set_function("PushStyleVar"					, sol::overload(
+																sol::resolve<void(int, float)>(PushStyleVar),
+																sol::resolve<void(int, float, float)>(PushStyleVar)
+															));
+		ImGui.set_function("PopStyleVar"					, sol::overload(
+																sol::resolve<void()>(PopStyleVar),
+																sol::resolve<void(int)>(PopStyleVar)
 															));
 		ImGui.set_function("GetStyleColorVec4"				, GetStyleColorVec4);
 		ImGui.set_function("GetFont"						, GetFont);
@@ -3369,6 +3386,9 @@ namespace sol_ImGui
 		ImGui.set_function("GetMouseCursor"					, GetMouseCursor);
 		ImGui.set_function("SetMouseCursor"					, SetMouseCursor);
 		ImGui.set_function("SetNextFrameWantCaptureMouse"			,SetNextFrameWantCaptureMouse);
+		ImGui.set_function("GetMouseWheel"					, GetMouseWheel);
+		ImGui.set_function("WantCaptureMouse"				, WantCaptureMouse);
+		ImGui.set_function("WantCaptureKeyboard"			, WantCaptureKeyboard);
 #pragma endregion Inputs Utilities: Mouse
 		
 #pragma region Clipboard Utilities
